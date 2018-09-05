@@ -1,0 +1,23 @@
+image: node:latest
+
+before_script:
+- apt-get -qq update
+- apt-get install -y jq
+
+# This folder is cached between builds
+# http://docs.gitlab.com/ce/ci/yaml/README.html#cache
+cache:
+  paths:
+  - node_modules/
+
+build_and_test_contracts:
+  script:
+  - npm install
+  - npm run compile
+  - for file in build/contracts/*.json; do jq '.abi' < "$file" > "${file%.json}.abi"; done
+  - for file in build/contracts/*.json; do jq -r '.bytecode' < "$file" > "${file%.json}.bin"; done
+  - mkdir build/contracts-flattened && for solfile in contracts/*.sol; do ./node_modules/.bin/truffle-flattener $solfile > build/contracts-flattened/${solfile##*/}; done
+  artifacts:
+    paths:
+    - build/
+    expire_in: 1 month
