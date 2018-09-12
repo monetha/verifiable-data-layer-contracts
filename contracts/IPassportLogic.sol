@@ -1,6 +1,6 @@
 pragma solidity ^0.4.24;
 
-interface IPassport {
+interface IPassportLogic {
     /**
      * @dev Returns the owner address of contract.
      */
