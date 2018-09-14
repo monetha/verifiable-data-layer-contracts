@@ -4,7 +4,7 @@ interface IPassportLogic {
     /**
      * @dev Returns the owner address of contract.
      */
-    function getOwner() external view returns (address);
+    function owner() external view returns (address);
 
     /**** Storage Set Methods ***********/
 

@@ -67,7 +67,7 @@ contract OwnableProxy {
     /**
      * @return The owner address.
      */
-    function getOwner() public view returns (address) {
+    function owner() public view returns (address) {
         return _getOwner();
     }
 
