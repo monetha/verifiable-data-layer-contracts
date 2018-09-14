@@ -17,7 +17,9 @@ contract TxDataStorage {
     mapping(address => mapping(bytes32 => BlockNumberValue)) private txBytesStorage;
 
     /// @param _key The key for the record
-    function setTxDataBlockNumber(bytes32 _key, bytes /* _data */) external {
+    /// @param _data The data for the record. Ignore "unused function parameter" warning, it's not commented out so that
+    ///              it would remain in the ABI file.
+    function setTxDataBlockNumber(bytes32 _key, bytes _data) external {
         txBytesStorage[msg.sender][_key] = BlockNumberValue({
             initialized : true,
             blockNumber : block.number
