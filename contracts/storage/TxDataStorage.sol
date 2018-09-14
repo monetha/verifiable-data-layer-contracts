@@ -2,8 +2,8 @@ pragma solidity ^0.4.24;
 
 /**
  * @title TxDataStorage
- * @dev This contract saves only the block number for the input parameters. The input parameters are not stored into
- * Ethereum storage, but they can be parsed from tx.data later.
+ * @dev This contract saves only the block number for the input data. The input data is not stored into
+ * Ethereum storage, but it can be decoded from the transaction input data later.
  */
 contract TxDataStorage {
     struct BlockNumberValue {
