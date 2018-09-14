@@ -42,6 +42,7 @@ contract PassportFactory is Ownable, HasNoEther, HasNoTokens {
     /**
     * @dev Creates new passport. The method should be called by the owner of the created passport.
     * After the passport is created, the owner must call the claimOwnership() passport method to become a full owner.
+    * @return address of the created passport
     */
     function createPassport() public returns (Passport) {
         Passport pass = new Passport(registry);
