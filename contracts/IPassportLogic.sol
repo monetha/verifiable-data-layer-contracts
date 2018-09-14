@@ -32,6 +32,9 @@ interface IPassportLogic {
     /// @param _value The value for the record
     function setBytes(bytes32 _key, bytes _value) external;
 
+    /// @param _key The key for the record
+    function setTxDataBlockNumber(bytes32 _key, bytes _data) external;
+
     /**** Storage Delete Methods ***********/
 
     /// @param _key The key for the record
@@ -51,6 +54,9 @@ interface IPassportLogic {
 
     /// @param _key The key for the record
     function deleteBytes(bytes32 _key) external;
+
+    /// @param _key The key for the record
+    function deleteTxDataBlockNumber(bytes32 _key) external;
 
     /**** Storage Get Methods ***********/
 
@@ -96,4 +102,10 @@ interface IPassportLogic {
     /// @param _key The key for the record
     function getBytes(bytes32 _key) external view returns (bool success, bytes value);
 
+    /// @param _factProvider The fact provider
+    /// @param _key The key for the record
+    function getTxDataBlockNumber(address _factProvider, bytes32 _key) external view returns (bool success, uint blockNumber);
+
+    /// @param _key The key for the record
+    function getTxDataBlockNumber(bytes32 _key) external view returns (bool success, uint blockNumber);
 }

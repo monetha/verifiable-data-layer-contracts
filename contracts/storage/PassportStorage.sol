@@ -6,6 +6,7 @@ import "./IntStorage.sol";
 import "./BoolStorage.sol";
 import "./StringStorage.sol";
 import "./BytesStorage.sol";
+import "./TxDataStorage.sol";
 
 contract PassportStorage
 is AddressStorage
@@ -14,4 +15,5 @@ is AddressStorage
 , BoolStorage
 , StringStorage
 , BytesStorage
+, TxDataStorage
 {}
