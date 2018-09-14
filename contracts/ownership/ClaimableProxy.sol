@@ -22,6 +22,10 @@ contract ClaimableProxy is OwnableProxy {
         assert(PENDING_OWNER_SLOT == keccak256("org.monetha.proxy.pendingOwner"));
     }
 
+    function pendingOwner() public view returns (address) {
+        return _getPendingOwner();
+    }
+
     /**
      * @dev Modifier throws if called by any account other than the pendingOwner.
      */
