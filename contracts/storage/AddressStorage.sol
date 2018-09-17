@@ -28,11 +28,6 @@ contract AddressStorage {
         return _getAddress(_factProvider, _key);
     }
 
-    /// @param _key The key for the record
-    function getAddress(bytes32 _key) external view returns (bool success, address value) {
-        return _getAddress(msg.sender, _key);
-    }
-
     function _setAddress(bytes32 _key, address _value) internal {
         addressStorage[msg.sender][_key] = AddressValue({
             initialized : true,

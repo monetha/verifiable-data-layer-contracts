@@ -28,11 +28,6 @@ contract IntStorage {
         return _getInt(_factProvider, _key);
     }
 
-    /// @param _key The key for the record
-    function getInt(bytes32 _key) external view returns (bool success, int value) {
-        return _getInt(msg.sender, _key);
-    }
-
     function _setInt(bytes32 _key, int _value) internal {
         intStorage[msg.sender][_key] = IntValue({
             initialized : true,

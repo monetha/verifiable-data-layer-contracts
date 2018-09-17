@@ -64,48 +64,27 @@ interface IPassportLogic {
     /// @param _key The key for the record
     function getAddress(address _factProvider, bytes32 _key) external view returns (bool success, address value);
 
-    /// @param _key The key for the record
-    function getAddress(bytes32 _key) external view returns (bool success, address value);
-
     /// @param _factProvider The fact provider
     /// @param _key The key for the record
     function getUint(address _factProvider, bytes32 _key) external view returns (bool success, uint value);
-
-    /// @param _key The key for the record
-    function getUint(bytes32 _key) external view returns (bool success, uint value);
 
     /// @param _factProvider The fact provider
     /// @param _key The key for the record
     function getInt(address _factProvider, bytes32 _key) external view returns (bool success, int value);
 
-    /// @param _key The key for the record
-    function getInt(bytes32 _key) external view returns (bool success, int value);
-
     /// @param _factProvider The fact provider
     /// @param _key The key for the record
     function getBool(address _factProvider, bytes32 _key) external view returns (bool success, bool value);
-
-    /// @param _key The key for the record
-    function getBool(bytes32 _key) external view returns (bool success, bool value);
 
     /// @param _factProvider The fact provider
     /// @param _key The key for the record
     function getString(address _factProvider, bytes32 _key) external view returns (bool success, string value);
 
-    /// @param _key The key for the record
-    function getString(bytes32 _key) external view returns (bool success, string value);
-
     /// @param _factProvider The fact provider
     /// @param _key The key for the record
     function getBytes(address _factProvider, bytes32 _key) external view returns (bool success, bytes value);
 
-    /// @param _key The key for the record
-    function getBytes(bytes32 _key) external view returns (bool success, bytes value);
-
     /// @param _factProvider The fact provider
     /// @param _key The key for the record
     function getTxDataBlockNumber(address _factProvider, bytes32 _key) external view returns (bool success, uint blockNumber);
-
-    /// @param _key The key for the record
-    function getTxDataBlockNumber(bytes32 _key) external view returns (bool success, uint blockNumber);
 }

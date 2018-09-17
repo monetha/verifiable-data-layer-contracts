@@ -28,11 +28,6 @@ contract BoolStorage {
         return _getBool(_factProvider, _key);
     }
 
-    /// @param _key The key for the record
-    function getBool(bytes32 _key) external view returns (bool success, bool value) {
-        return _getBool(msg.sender, _key);
-    }
-
     function _setBool(bytes32 _key, bool _value) internal {
         boolStorage[msg.sender][_key] = BoolValue({
             initialized : true,

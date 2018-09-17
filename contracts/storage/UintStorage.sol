@@ -28,11 +28,6 @@ contract UintStorage {
         return _getUint(_factProvider, _key);
     }
 
-    /// @param _key The key for the record
-    function getUint(bytes32 _key) external view returns (bool success, uint value) {
-        return _getUint(msg.sender, _key);
-    }
-
     function _setUint(bytes32 _key, uint _value) internal {
         uintStorage[msg.sender][_key] = UintValue({
             initialized : true,

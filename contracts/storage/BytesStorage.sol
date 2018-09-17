@@ -28,11 +28,6 @@ contract BytesStorage {
         return _getBytes(_factProvider, _key);
     }
 
-    /// @param _key The key for the record
-    function getBytes(bytes32 _key) external view returns (bool success, bytes value) {
-        return _getBytes(msg.sender, _key);
-    }
-
     function _setBytes(bytes32 _key, bytes _value) internal {
         bytesStorage[msg.sender][_key] = BytesValue({
             initialized : true,

@@ -28,11 +28,6 @@ contract StringStorage {
         return _getString(_factProvider, _key);
     }
 
-    /// @param _key The key for the record
-    function getString(bytes32 _key) external view returns (bool success, string value) {
-        return _getString(msg.sender, _key);
-    }
-
     function _setString(bytes32 _key, string _value) internal {
         stringStorage[msg.sender][_key] = StringValue({
             initialized : true,

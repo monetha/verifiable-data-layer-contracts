@@ -39,11 +39,6 @@ contract TxDataStorage {
         return _getTxDataBlockNumber(_factProvider, _key);
     }
 
-    /// @param _key The key for the record
-    function getTxDataBlockNumber(bytes32 _key) external view returns (bool success, uint blockNumber) {
-        return _getTxDataBlockNumber(msg.sender, _key);
-    }
-
     function _getTxDataBlockNumber(address _factProvider, bytes32 _key) private view returns (bool success, uint blockNumber) {
         BlockNumberValue storage initValue = txBytesStorage[_factProvider][_key];
         return (initValue.initialized, initValue.blockNumber);
