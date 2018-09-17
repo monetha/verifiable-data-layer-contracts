@@ -10,12 +10,14 @@ contract('Passport', function (accounts) {
 
     let newOwner;
     let factProvider;
+    let factProvider2;
 
     beforeEach(async function () {
         const monethaOwner = accounts[0];
         passportOwner = accounts[1];
         newOwner = accounts[2];
         factProvider = accounts[3];
+        factProvider2 = accounts[4];
 
         const passportLogic = await PassportLogic.new({ from: monethaOwner });
         const passportLogicRegistry = await PassportLogicRegistry.new("0.1", passportLogic.address, { from: monethaOwner });
@@ -46,8 +48,8 @@ contract('Passport', function (accounts) {
         assert.equal(ownerL, newOwner);
     });
 
-    it('should correctly store string of fact provider', async function () {
-        const key = "0x1234";
+    it('should store string of fact provider', async function () {
+        const key = web3.toHex('test');
         const str = "this is tes only message";
 
         await passportAsLogic.setString(key, str, { from: factProvider });
@@ -55,5 +57,22 @@ contract('Passport', function (accounts) {
         const getStringRes = await passportAsLogic.getString(factProvider, key);
         assert.isTrue(getStringRes[0]);
         assert.equal(getStringRes[1], str);
+    });
+
+    it('should not overlap strings from different fact providers', async function () {
+        const key = web3.toHex('test');
+        const str1 = "this is tes only message 1";
+        const str2 = "this is tes only message 2";
+
+        await passportAsLogic.setString(key, str1, { from: factProvider });
+        await passportAsLogic.setString(key, str2, { from: factProvider2 });
+
+        const getStringRes = await passportAsLogic.getString(factProvider, key);
+        assert.isTrue(getStringRes[0]);
+        assert.equal(getStringRes[1], str1);
+
+        const getStringRes2 = await passportAsLogic.getString(factProvider2, key);
+        assert.isTrue(getStringRes2[0]);
+        assert.equal(getStringRes2[1], str2);
     });
 });
