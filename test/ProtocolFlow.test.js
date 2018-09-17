@@ -75,4 +75,20 @@ contract('Passport', function (accounts) {
         assert.isTrue(getStringRes2[0]);
         assert.equal(getStringRes2[1], str2);
     });
+
+    it('should allow fact provider to delete string', async function () {
+        const key = web3.toHex('test');
+        const str = "this is tes only message";
+
+        await passportAsLogic.setString(key, str, { from: factProvider });
+
+        const getStringRes = await passportAsLogic.getString(factProvider, key);
+        assert.isTrue(getStringRes[0]);
+        assert.equal(getStringRes[1], str);
+
+        await passportAsLogic.deleteString(key, { from: factProvider });
+
+        const getStringRes2 = await passportAsLogic.getString(factProvider, key);
+        assert.isTrue(!getStringRes2[0]);
+    });
 });
