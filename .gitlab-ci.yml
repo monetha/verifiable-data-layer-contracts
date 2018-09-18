@@ -1,8 +1,6 @@
-image: node:latest
-
-before_script:
-- apt-get -qq update
-- apt-get install -y jq
+stages:
+  - build
+  - gogen
 
 # This folder is cached between builds
 # http://docs.gitlab.com/ce/ci/yaml/README.html#cache
@@ -10,8 +8,12 @@ cache:
   paths:
   - node_modules/
 
-build_and_test_contracts:
+build and test:
+  stage: build
+  image: node:latest
   script:
+  - apt-get -qq update
+  - apt-get install -y jq
   - npm install
   - npm run compile
   - npm run test
@@ -21,4 +23,15 @@ build_and_test_contracts:
   artifacts:
     paths:
     - build/
+    expire_in: 1 month
+
+generate go packages:
+  stage: gogen
+  image: ethereum/client-go:alltools-v1.8.15
+  script:
+  - mkdir build/contracts-go
+  - for file in contracts/*.sol; do f=$(basename -- ${file%.*}); abigen --abi "build/contracts/${f}.abi" --bin "build/contracts/${f}.bin" --out "build/contracts-go/${f}.go" --pkg contracts --type "${f}Contract"; done
+  artifacts:
+    paths:
+    - build/contracts-go
     expire_in: 1 month
