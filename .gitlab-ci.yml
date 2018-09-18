@@ -20,7 +20,7 @@ build and test:
   - for file in build/contracts/*.json; do jq '.abi' < "$file" > "${file%.json}.abi"; done
   - for file in build/contracts/*.json; do jq -r '.bytecode' < "$file" > "${file%.json}.bin"; done
   - mkdir build/contracts-flattened && for solfile in contracts/*.sol; do ./node_modules/.bin/truffle-flattener $solfile > build/contracts-flattened/${solfile##*/}; done
-  - echo "Compiler: $(./node_modules/.bin/solcjs --version)" > build/contracts-flattened/README.md
+  - 'echo "Compiler: $(./node_modules/.bin/solcjs --version)" > build/contracts-flattened/README.md'
   artifacts:
     paths:
     - build/
