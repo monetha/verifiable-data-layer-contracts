@@ -12,7 +12,6 @@ cache:
 
 build and test:
   script:
-  - rm -rf ./node_modules/
   - npm install
   - npm run compile
   - npm run test
