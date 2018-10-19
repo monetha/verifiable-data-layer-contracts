@@ -1,15 +1,10 @@
 pragma solidity ^0.4.24;
 
-contract BoolStorage {
-    struct BoolValue {
-        bool initialized;
-        bool value;
-    }
+import "./Storage.sol";
 
+contract BoolStorageLogic is Storage {
     event BoolUpdated(address indexed factProvider, bytes32 indexed key);
     event BoolDeleted(address indexed factProvider, bytes32 indexed key);
-
-    mapping(address => mapping(bytes32 => BoolValue)) private boolStorage;
 
     /// @param _key The key for the record
     /// @param _value The value for the record

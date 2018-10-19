@@ -1,15 +1,10 @@
 pragma solidity ^0.4.24;
 
-contract UintStorage {
-    struct UintValue {
-        bool initialized;
-        uint value;
-    }
+import "./Storage.sol";
 
+contract UintStorageLogic is Storage {
     event UintUpdated(address indexed factProvider, bytes32 indexed key);
     event UintDeleted(address indexed factProvider, bytes32 indexed key);
-
-    mapping(address => mapping(bytes32 => UintValue)) private uintStorage;
 
     /// @param _key The key for the record
     /// @param _value The value for the record

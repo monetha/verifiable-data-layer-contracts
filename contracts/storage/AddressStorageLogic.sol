@@ -1,15 +1,10 @@
 pragma solidity ^0.4.24;
 
-contract AddressStorage {
-    struct AddressValue {
-        bool initialized;
-        address value;
-    }
+import "./Storage.sol";
 
+contract AddressStorageLogic is Storage {
     event AddressUpdated(address indexed factProvider, bytes32 indexed key);
     event AddressDeleted(address indexed factProvider, bytes32 indexed key);
-
-    mapping(address => mapping(bytes32 => AddressValue)) private addressStorage;
 
     /// @param _key The key for the record
     /// @param _value The value for the record

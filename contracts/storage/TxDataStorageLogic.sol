@@ -1,20 +1,15 @@
 pragma solidity ^0.4.24;
 
+import "./Storage.sol";
+
 /**
  * @title TxDataStorage
  * @dev This contract saves only the block number for the input data. The input data is not stored into
  * Ethereum storage, but it can be decoded from the transaction input data later.
  */
-contract TxDataStorage {
-    struct BlockNumberValue {
-        bool initialized;
-        uint blockNumber;
-    }
-
+contract TxDataStorageLogic is Storage {
     event TxDataUpdated(address indexed factProvider, bytes32 indexed key);
     event TxDataDeleted(address indexed factProvider, bytes32 indexed key);
-
-    mapping(address => mapping(bytes32 => BlockNumberValue)) private txBytesStorage;
 
     /// @param _key The key for the record
     /// @param _data The data for the record. Ignore "unused function parameter" warning, it's not commented out so that

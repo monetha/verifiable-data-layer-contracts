@@ -1,15 +1,10 @@
 pragma solidity ^0.4.24;
 
-contract IntStorage {
-    struct IntValue {
-        bool initialized;
-        int value;
-    }
+import "./Storage.sol";
 
+contract IntStorageLogic is Storage {
     event IntUpdated(address indexed factProvider, bytes32 indexed key);
     event IntDeleted(address indexed factProvider, bytes32 indexed key);
-
-    mapping(address => mapping(bytes32 => IntValue)) private intStorage;
 
     /// @param _key The key for the record
     /// @param _value The value for the record

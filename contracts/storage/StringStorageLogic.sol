@@ -1,15 +1,10 @@
 pragma solidity ^0.4.24;
 
-contract StringStorage {
-    struct StringValue {
-        bool initialized;
-        string value;
-    }
+import "./Storage.sol";
 
+contract StringStorageLogic is Storage {
     event StringUpdated(address indexed factProvider, bytes32 indexed key);
     event StringDeleted(address indexed factProvider, bytes32 indexed key);
-
-    mapping(address => mapping(bytes32 => StringValue)) private stringStorage;
 
     /// @param _key The key for the record
     /// @param _value The value for the record

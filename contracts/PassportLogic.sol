@@ -1,11 +1,23 @@
 pragma solidity ^0.4.24;
 
-import "./storage/PassportStorage.sol";
 import "./ownership/ClaimableProxy.sol";
 import "./IPassportLogic.sol";
+import "./storage/AddressStorageLogic.sol";
+import "./storage/UintStorageLogic.sol";
+import "./storage/IntStorageLogic.sol";
+import "./storage/BoolStorageLogic.sol";
+import "./storage/StringStorageLogic.sol";
+import "./storage/BytesStorageLogic.sol";
+import "./storage/TxDataStorageLogic.sol";
 
 contract PassportLogic
 is IPassportLogic
 , ClaimableProxy
-, PassportStorage
+, AddressStorageLogic
+, UintStorageLogic
+, IntStorageLogic
+, BoolStorageLogic
+, StringStorageLogic
+, BytesStorageLogic
+, TxDataStorageLogic
 {}

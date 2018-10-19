@@ -1,15 +1,10 @@
 pragma solidity ^0.4.24;
 
-contract BytesStorage {
-    struct BytesValue {
-        bool initialized;
-        bytes value;
-    }
+import "./Storage.sol";
 
+contract BytesStorageLogic is Storage {
     event BytesUpdated(address indexed factProvider, bytes32 indexed key);
     event BytesDeleted(address indexed factProvider, bytes32 indexed key);
-
-    mapping(address => mapping(bytes32 => BytesValue)) private bytesStorage;
 
     /// @param _key The key for the record
     /// @param _value The value for the record
