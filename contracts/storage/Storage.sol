@@ -95,7 +95,7 @@ contract Storage is ClaimableProxy
     /**
      *  Allows owner to add fact provider to whitelist.
      */
-    function addWhitelistFactProvider(address _address) onlyOwner external {
+    function addFactProviderToWhitelist(address _address) onlyOwner external {
         factProviderWhitelist[_address] = true;
         emit WhitelistFactProviderAdded(_address);
     }
@@ -103,7 +103,7 @@ contract Storage is ClaimableProxy
     /**
      *  Allows owner to remove fact provider from whitelist.
      */
-    function removeWhitelistFactProvider(address _address) onlyOwner external {
+    function removeFactProviderFromWhitelist(address _address) onlyOwner external {
         delete factProviderWhitelist[_address];
         emit WhitelistFactProviderRemoved(_address);
     }
