@@ -23,7 +23,7 @@ contract UintStorageLogic is Storage {
         return _getUint(_factProvider, _key);
     }
 
-    function _setUint(bytes32 _key, uint _value) internal {
+    function _setUint(bytes32 _key, uint _value) allowedFactProvider internal {
         uintStorage[msg.sender][_key] = UintValue({
             initialized : true,
             value : _value
@@ -31,7 +31,7 @@ contract UintStorageLogic is Storage {
         emit UintUpdated(msg.sender, _key);
     }
 
-    function _deleteUint(bytes32 _key) internal {
+    function _deleteUint(bytes32 _key) allowedFactProvider internal {
         delete uintStorage[msg.sender][_key];
         emit UintDeleted(msg.sender, _key);
     }

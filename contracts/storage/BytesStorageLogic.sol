@@ -23,7 +23,7 @@ contract BytesStorageLogic is Storage {
         return _getBytes(_factProvider, _key);
     }
 
-    function _setBytes(bytes32 _key, bytes _value) internal {
+    function _setBytes(bytes32 _key, bytes _value) allowedFactProvider internal {
         bytesStorage[msg.sender][_key] = BytesValue({
             initialized : true,
             value : _value
@@ -31,7 +31,7 @@ contract BytesStorageLogic is Storage {
         emit BytesUpdated(msg.sender, _key);
     }
 
-    function _deleteBytes(bytes32 _key) internal {
+    function _deleteBytes(bytes32 _key) allowedFactProvider internal {
         delete bytesStorage[msg.sender][_key];
         emit BytesDeleted(msg.sender, _key);
     }

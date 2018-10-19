@@ -23,7 +23,7 @@ contract IntStorageLogic is Storage {
         return _getInt(_factProvider, _key);
     }
 
-    function _setInt(bytes32 _key, int _value) internal {
+    function _setInt(bytes32 _key, int _value) allowedFactProvider internal {
         intStorage[msg.sender][_key] = IntValue({
             initialized : true,
             value : _value
@@ -31,7 +31,7 @@ contract IntStorageLogic is Storage {
         emit IntUpdated(msg.sender, _key);
     }
 
-    function _deleteInt(bytes32 _key) internal {
+    function _deleteInt(bytes32 _key) allowedFactProvider internal {
         delete intStorage[msg.sender][_key];
         emit IntDeleted(msg.sender, _key);
     }

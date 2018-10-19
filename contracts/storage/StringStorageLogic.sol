@@ -23,7 +23,7 @@ contract StringStorageLogic is Storage {
         return _getString(_factProvider, _key);
     }
 
-    function _setString(bytes32 _key, string _value) internal {
+    function _setString(bytes32 _key, string _value) allowedFactProvider internal {
         stringStorage[msg.sender][_key] = StringValue({
             initialized : true,
             value : _value
@@ -31,7 +31,7 @@ contract StringStorageLogic is Storage {
         emit StringUpdated(msg.sender, _key);
     }
 
-    function _deleteString(bytes32 _key) internal {
+    function _deleteString(bytes32 _key) allowedFactProvider internal {
         delete stringStorage[msg.sender][_key];
         emit StringDeleted(msg.sender, _key);
     }

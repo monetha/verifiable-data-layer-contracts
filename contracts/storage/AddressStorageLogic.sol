@@ -23,7 +23,7 @@ contract AddressStorageLogic is Storage {
         return _getAddress(_factProvider, _key);
     }
 
-    function _setAddress(bytes32 _key, address _value) internal {
+    function _setAddress(bytes32 _key, address _value) allowedFactProvider internal {
         addressStorage[msg.sender][_key] = AddressValue({
             initialized : true,
             value : _value
@@ -31,7 +31,7 @@ contract AddressStorageLogic is Storage {
         emit AddressUpdated(msg.sender, _key);
     }
 
-    function _deleteAddress(bytes32 _key) internal {
+    function _deleteAddress(bytes32 _key) allowedFactProvider internal {
         delete addressStorage[msg.sender][_key];
         emit AddressDeleted(msg.sender, _key);
     }

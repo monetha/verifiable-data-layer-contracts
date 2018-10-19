@@ -14,7 +14,7 @@ contract TxDataStorageLogic is Storage {
     /// @param _key The key for the record
     /// @param _data The data for the record. Ignore "unused function parameter" warning, it's not commented out so that
     ///              it would remain in the ABI file.
-    function setTxDataBlockNumber(bytes32 _key, bytes _data) external {
+    function setTxDataBlockNumber(bytes32 _key, bytes _data) allowedFactProvider external {
         txBytesStorage[msg.sender][_key] = BlockNumberValue({
             initialized : true,
             blockNumber : block.number
@@ -23,7 +23,7 @@ contract TxDataStorageLogic is Storage {
     }
 
     /// @param _key The key for the record
-    function deleteTxDataBlockNumber(bytes32 _key) external {
+    function deleteTxDataBlockNumber(bytes32 _key) allowedFactProvider external {
         delete txBytesStorage[msg.sender][_key];
         emit TxDataDeleted(msg.sender, _key);
     }

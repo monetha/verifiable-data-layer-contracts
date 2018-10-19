@@ -23,7 +23,7 @@ contract BoolStorageLogic is Storage {
         return _getBool(_factProvider, _key);
     }
 
-    function _setBool(bytes32 _key, bool _value) internal {
+    function _setBool(bytes32 _key, bool _value) allowedFactProvider internal {
         boolStorage[msg.sender][_key] = BoolValue({
             initialized : true,
             value : _value
@@ -31,7 +31,7 @@ contract BoolStorageLogic is Storage {
         emit BoolUpdated(msg.sender, _key);
     }
 
-    function _deleteBool(bytes32 _key) internal {
+    function _deleteBool(bytes32 _key) allowedFactProvider internal {
         delete boolStorage[msg.sender][_key];
         emit BoolDeleted(msg.sender, _key);
     }
