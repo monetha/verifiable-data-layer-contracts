@@ -88,7 +88,7 @@ contract Storage is ClaimableProxy
     /**
      *  Returns true if fact provider is added to the whitelist.
      */
-    function isInFactProviderWhitelist(address _address) external view returns (bool) {
+    function isFactProviderInWhitelist(address _address) external view returns (bool) {
         return factProviderWhitelist[_address];
     }
 
