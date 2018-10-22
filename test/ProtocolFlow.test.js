@@ -1,3 +1,6 @@
+const {expectThrow} = require('./helpers/expectThrow');
+const {EVMRevert} = require('./helpers/EVMRevert');
+
 const Passport = artifacts.require('Passport');
 const PassportLogic = artifacts.require('PassportLogic');
 const PassportLogicRegistry = artifacts.require('PassportLogicRegistry');
@@ -19,14 +22,14 @@ contract('Passport', function (accounts) {
         factProvider = accounts[3];
         factProvider2 = accounts[4];
 
-        const passportLogic = await PassportLogic.new({ from: monethaOwner });
-        const passportLogicRegistry = await PassportLogicRegistry.new("0.1", passportLogic.address, { from: monethaOwner });
-        const passportFactory = await PassportFactory.new(passportLogicRegistry.address, { from: monethaOwner });
+        const passportLogic = await PassportLogic.new({from: monethaOwner});
+        const passportLogicRegistry = await PassportLogicRegistry.new("0.1", passportLogic.address, {from: monethaOwner});
+        const passportFactory = await PassportFactory.new(passportLogicRegistry.address, {from: monethaOwner});
 
-        const createPassportTx = await passportFactory.createPassport({ from: passportOwner });
+        const createPassportTx = await passportFactory.createPassport({from: passportOwner});
         passport = Passport.at(createPassportTx.logs[0].args.passport);
         passportAsLogic = PassportLogic.at(passport.address);
-        await passport.claimOwnership({ from: passportOwner });
+        await passport.claimOwnership({from: passportOwner});
     });
 
     it('should have the correct owner', async function () {
@@ -38,8 +41,8 @@ contract('Passport', function (accounts) {
     });
 
     it('should have the new owner after transfer', async function () {
-        await passport.transferOwnership(newOwner, { from: passportOwner });
-        await passport.claimOwnership({ from: newOwner });
+        await passport.transferOwnership(newOwner, {from: passportOwner});
+        await passport.claimOwnership({from: newOwner});
 
         const owner = await passport.owner();
         assert.equal(owner, newOwner);
@@ -52,7 +55,7 @@ contract('Passport', function (accounts) {
         const key = web3.toHex('test');
         const str = "this is tes only message";
 
-        await passportAsLogic.setString(key, str, { from: factProvider });
+        await passportAsLogic.setString(key, str, {from: factProvider});
 
         const getStringRes = await passportAsLogic.getString(factProvider, key);
         assert.isTrue(getStringRes[0]);
@@ -64,8 +67,8 @@ contract('Passport', function (accounts) {
         const str1 = "this is tes only message 1";
         const str2 = "this is tes only message 2";
 
-        await passportAsLogic.setString(key, str1, { from: factProvider });
-        await passportAsLogic.setString(key, str2, { from: factProvider2 });
+        await passportAsLogic.setString(key, str1, {from: factProvider});
+        await passportAsLogic.setString(key, str2, {from: factProvider2});
 
         const getStringRes = await passportAsLogic.getString(factProvider, key);
         assert.isTrue(getStringRes[0]);
@@ -80,13 +83,100 @@ contract('Passport', function (accounts) {
         const key = web3.toHex('test');
         const str = "this is tes only message";
 
-        await passportAsLogic.setString(key, str, { from: factProvider });
+        await passportAsLogic.setString(key, str, {from: factProvider});
 
         const getStringRes = await passportAsLogic.getString(factProvider, key);
         assert.isTrue(getStringRes[0]);
         assert.equal(getStringRes[1], str);
 
-        await passportAsLogic.deleteString(key, { from: factProvider });
+        await passportAsLogic.deleteString(key, {from: factProvider});
+
+        const getStringRes2 = await passportAsLogic.getString(factProvider, key);
+        assert.isTrue(!getStringRes2[0]);
+    });
+
+    it('should prevent to store string of fact provider when whitelist only permission is enabled', async function () {
+        const key = web3.toHex('test');
+        const str = "this is tes only message";
+
+        await passportAsLogic.setWhitelistOnlyPermission(true, {from: passportOwner});
+
+        await expectThrow(passportAsLogic.setString(key, str, {from: factProvider}), EVMRevert);
+    });
+
+    it('should prevent to delete string of fact provider when whitelist only permission is enabled', async function () {
+        const key = web3.toHex('test');
+
+        await passportAsLogic.setWhitelistOnlyPermission(true, {from: passportOwner});
+
+        await expectThrow(passportAsLogic.deleteString(key, {from: factProvider}), EVMRevert);
+    });
+
+    it('should allow to store string of fact provider when whitelist only permission is disabled', async function () {
+        const key = web3.toHex('test');
+        const str = "this is tes only message";
+
+        // enable whitelist only permission and the disable it
+        await passportAsLogic.setWhitelistOnlyPermission(true, {from: passportOwner});
+        await passportAsLogic.setWhitelistOnlyPermission(false, {from: passportOwner});
+
+        await passportAsLogic.setString(key, str, {from: factProvider});
+
+        const getStringRes = await passportAsLogic.getString(factProvider, key);
+        assert.isTrue(getStringRes[0]);
+        assert.equal(getStringRes[1], str);
+    });
+
+    it('should allow to delete string of fact provider when whitelist only permission is disabled', async function () {
+        const key = web3.toHex('test');
+        const str = "this is tes only message";
+
+        await passportAsLogic.setString(key, str, {from: factProvider});
+
+        const getStringRes = await passportAsLogic.getString(factProvider, key);
+        assert.isTrue(getStringRes[0]);
+        assert.equal(getStringRes[1], str);
+
+        // enable whitelist only permission and the disable it
+        await passportAsLogic.setWhitelistOnlyPermission(true, {from: passportOwner});
+        await passportAsLogic.setWhitelistOnlyPermission(false, {from: passportOwner});
+
+        await passportAsLogic.deleteString(key, {from: factProvider});
+
+        const getStringRes2 = await passportAsLogic.getString(factProvider, key);
+        assert.isTrue(!getStringRes2[0]);
+    });
+
+    it('should allow to store string of fact provider when whitelist only permission is enabled and the fact provider is in the whitelist', async function () {
+        const key = web3.toHex('test');
+        const str = "this is tes only message";
+
+        // enable whitelist only permission and add fact provider to the whitelist
+        await passportAsLogic.addFactProviderToWhitelist(factProvider, {from: passportOwner});
+        await passportAsLogic.setWhitelistOnlyPermission(true, {from: passportOwner});
+
+        await passportAsLogic.setString(key, str, {from: factProvider});
+
+        const getStringRes = await passportAsLogic.getString(factProvider, key);
+        assert.isTrue(getStringRes[0]);
+        assert.equal(getStringRes[1], str);
+    });
+
+    it('should allow to delete string of fact provider when whitelist only permission is enabled and the fact provider is in the whitelist', async function () {
+        const key = web3.toHex('test');
+        const str = "this is tes only message";
+
+        // enable whitelist only permission and add fact provider to the whitelist
+        await passportAsLogic.addFactProviderToWhitelist(factProvider, {from: passportOwner});
+        await passportAsLogic.setWhitelistOnlyPermission(true, {from: passportOwner});
+
+        await passportAsLogic.setString(key, str, {from: factProvider});
+
+        const getStringRes = await passportAsLogic.getString(factProvider, key);
+        assert.isTrue(getStringRes[0]);
+        assert.equal(getStringRes[1], str);
+
+        await passportAsLogic.deleteString(key, {from: factProvider});
 
         const getStringRes2 = await passportAsLogic.getString(factProvider, key);
         assert.isTrue(!getStringRes2[0]);
