@@ -181,4 +181,27 @@ contract('Passport', function (accounts) {
         const getStringRes2 = await passportAsLogic.getString(factProvider, key);
         assert.isTrue(!getStringRes2[0]);
     });
+
+    it('should prevent to store string of fact provider when whitelist only permission is enabled and the fact provider is removed from the whitelist', async function () {
+        const key = web3.toHex('test');
+        const str = "this is tes only message";
+
+        // enable whitelist only permission and add fact provider to the whitelist and then remove
+        await passportAsLogic.addFactProviderToWhitelist(factProvider, {from: passportOwner});
+        await passportAsLogic.setWhitelistOnlyPermission(true, {from: passportOwner});
+        await passportAsLogic.removeFactProviderFromWhitelist(factProvider, {from: passportOwner});
+
+        await expectThrow(passportAsLogic.setString(key, str, {from: factProvider}), EVMRevert);
+    });
+
+    it('should prevent to delete string of fact provider when whitelist only permission is enabled and the fact provider is removed from the whitelist', async function () {
+        const key = web3.toHex('test');
+
+        // enable whitelist only permission and add fact provider to the whitelist and then remove
+        await passportAsLogic.addFactProviderToWhitelist(factProvider, {from: passportOwner});
+        await passportAsLogic.setWhitelistOnlyPermission(true, {from: passportOwner});
+        await passportAsLogic.removeFactProviderFromWhitelist(factProvider, {from: passportOwner});
+
+        await expectThrow(passportAsLogic.deleteString(key, {from: factProvider}), EVMRevert);
+    });
 });
