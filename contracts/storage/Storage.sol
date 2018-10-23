@@ -66,8 +66,15 @@ contract Storage is ClaimableProxy
      *  Restrict methods in such way, that they can be invoked only by allowed fact provider.
      */
     modifier allowedFactProvider() {
-        require(!onlyFactProviderFromWhitelistAllowed || factProviderWhitelist[msg.sender] || msg.sender == _getOwner());
+        require(isAllowedFactProvider(msg.sender));
         _;
+    }
+
+    /**
+     *  Returns true when the given address is an allowed fact provider.
+     */
+    function isAllowedFactProvider(address _address) public view returns (bool) {
+        return !onlyFactProviderFromWhitelistAllowed || factProviderWhitelist[_address] || _address == _getOwner();
     }
 
     /**
