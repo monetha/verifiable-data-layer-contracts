@@ -16,8 +16,10 @@ contract('FactProviderRegistry', function (accounts) {
     it('should register fact provider info by owner', async function () {
         const factProvider = accounts[1];
         const factProviderName = "Fact provider name";
+        const factProviderPassportAddress = "0x0000000000000000000000000000000000000000";
+        const factProviderWebsite = "https://www.monetha.io"
 
-        const {logs} = await factProviderRegistry.setFactProviderInfo(factProvider, factProviderName, {from: factProviderRegistryOwner});
+        const {logs} = await factProviderRegistry.setFactProviderInfo(factProvider, factProviderName, factProviderPassportAddress, factProviderWebsite, {from: factProviderRegistryOwner});
 
         expectEvent.inLogs(logs, 'FactProviderAdded', {
             factProvider: factProvider,
@@ -33,13 +35,16 @@ contract('FactProviderRegistry', function (accounts) {
         const factProviderName = "Fact provider name";
         const factProviderName2 = "Fact provider name 2";
 
-        await factProviderRegistry.setFactProviderInfo(factProvider, factProviderName, {from: factProviderRegistryOwner});
+        const factProviderPassportAddress = "0x0000000000000000000000000000000000000001";
+        const factProviderWebsite = "https://www.monetha.io"
+
+        await factProviderRegistry.setFactProviderInfo(factProvider, factProviderName, factProviderPassportAddress, factProviderWebsite, {from: factProviderRegistryOwner});
 
         const info = await factProviderRegistry.factProviders(factProvider);
         assert.isTrue(info[0]);
         assert.equal(factProviderName, info[1]);
 
-        const {logs} = await factProviderRegistry.setFactProviderInfo(factProvider, factProviderName2, {from: factProviderRegistryOwner});
+        const {logs} = await factProviderRegistry.setFactProviderInfo(factProvider, factProviderName2, factProviderPassportAddress, factProviderWebsite, {from: factProviderRegistryOwner});
 
         expectEvent.inLogs(logs, 'FactProviderUpdated', {
             factProvider: factProvider,

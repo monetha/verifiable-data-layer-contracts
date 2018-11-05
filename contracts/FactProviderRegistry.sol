@@ -6,7 +6,7 @@ import "openzeppelin-solidity/contracts/ownership/HasNoTokens.sol";
 
 /**
  * @title FactProviderRegistry
- * @dev This contract works as a registry of fact providers.
+ * @dev This contract works as a registry of known fact providers that are using Monetha reputation platform.
  */
 contract FactProviderRegistry is Ownable, HasNoEther, HasNoTokens {
     /**
@@ -27,25 +27,33 @@ contract FactProviderRegistry is Ownable, HasNoEther, HasNoTokens {
     struct FactProviderInfo {
         bool initialized;
         string name;
+        address reputation_passport;
+        string website;
     }
 
     mapping(address => FactProviderInfo) public factProviders;
 
     /**
      * @dev Registers or updates a fact provider.
-     * @param _factProvider representing the address of fact provider
-     * @param _factProviderName representing the name of fact provider
+     * @param _factProvider representing the address of fact provider, which is used to provide facts
+     * @param _factProviderName representing user friendly name of fact provider, e.g. Monetha Wallet
+     * @param _factProviderReputationPassport representing reputation passport address of fact provider (if exists)
+     * @param _factProviderWebsite representing website of fact provider
      */
     function setFactProviderInfo(
         address _factProvider,
-        string _factProviderName
+        string _factProviderName,
+        address _factProviderReputationPassport,
+        string _factProviderWebsite
     ) external onlyOwner {
         bool initializedFactProvider;
         initializedFactProvider = factProviders[_factProvider].initialized;
 
         factProviders[_factProvider] = FactProviderInfo({
             initialized : true,
-            name : _factProviderName
+            name : _factProviderName,
+            reputation_passport : _factProviderReputationPassport,
+            website : _factProviderWebsite
             });
 
         if (initializedFactProvider) {
