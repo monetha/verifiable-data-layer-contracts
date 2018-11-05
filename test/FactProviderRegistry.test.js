@@ -16,8 +16,8 @@ contract('FactProviderRegistry', function (accounts) {
     it('should register fact provider info by owner', async function () {
         const factProvider = accounts[1];
         const factProviderName = "Fact provider name";
-        const factProviderPassportAddress = "0x0000000000000000000000000000000000000000";
-        const factProviderWebsite = "https://www.monetha.io"
+        const factProviderPassportAddress = "0x0000000000000000000000000000000000000001";
+        const factProviderWebsite = "https://www.monetha.io";
 
         const {logs} = await factProviderRegistry.setFactProviderInfo(factProvider, factProviderName, factProviderPassportAddress, factProviderWebsite, {from: factProviderRegistryOwner});
 
@@ -28,6 +28,8 @@ contract('FactProviderRegistry', function (accounts) {
         const info = await factProviderRegistry.factProviders(factProvider);
         assert.isTrue(info[0]);
         assert.equal(factProviderName, info[1]);
+        assert.equal(factProviderPassportAddress, info[2]);
+        assert.equal(factProviderWebsite, info[3]);
     });
 
     it('should update fact provider info by owner', async function () {
@@ -36,13 +38,15 @@ contract('FactProviderRegistry', function (accounts) {
         const factProviderName2 = "Fact provider name 2";
 
         const factProviderPassportAddress = "0x0000000000000000000000000000000000000001";
-        const factProviderWebsite = "https://www.monetha.io"
+        const factProviderWebsite = "https://www.monetha.io";
 
         await factProviderRegistry.setFactProviderInfo(factProvider, factProviderName, factProviderPassportAddress, factProviderWebsite, {from: factProviderRegistryOwner});
 
         const info = await factProviderRegistry.factProviders(factProvider);
         assert.isTrue(info[0]);
         assert.equal(factProviderName, info[1]);
+        assert.equal(factProviderPassportAddress, info[2]);
+        assert.equal(factProviderWebsite, info[3]);
 
         const {logs} = await factProviderRegistry.setFactProviderInfo(factProvider, factProviderName2, factProviderPassportAddress, factProviderWebsite, {from: factProviderRegistryOwner});
 
@@ -53,13 +57,17 @@ contract('FactProviderRegistry', function (accounts) {
         const info2 = await factProviderRegistry.factProviders(factProvider);
         assert.isTrue(info2[0]);
         assert.equal(factProviderName2, info2[1]);
+        assert.equal(factProviderPassportAddress, info2[2]);
+        assert.equal(factProviderWebsite, info2[3]);
     });
 
     it('should delete fact provider info by owner', async function () {
         const factProvider = accounts[1];
         const factProviderName = "Fact provider name";
+        const factProviderPassportAddress = "0x0000000000000000000000000000000000000001";
+        const factProviderWebsite = "https://www.monetha.io";
 
-        await factProviderRegistry.setFactProviderInfo(factProvider, factProviderName, {from: factProviderRegistryOwner});
+        await factProviderRegistry.setFactProviderInfo(factProvider, factProviderName, factProviderPassportAddress, factProviderWebsite, {from: factProviderRegistryOwner});
 
         const info = await factProviderRegistry.factProviders(factProvider);
         assert.isTrue(info[0]);
@@ -77,17 +85,21 @@ contract('FactProviderRegistry', function (accounts) {
     it('should not allow others to set fact provider info', async function () {
         const factProvider = accounts[1];
         const factProviderName = "Fact provider name";
+        const factProviderPassportAddress = "0x0000000000000000000000000000000000000001";
+        const factProviderWebsite = "https://www.monetha.io";
         const randomGuy = accounts[2];
 
-        await expectThrow(factProviderRegistry.setFactProviderInfo(factProvider, factProviderName, {from: randomGuy}), EVMRevert);
+        await expectThrow(factProviderRegistry.setFactProviderInfo(factProvider, factProviderName, factProviderPassportAddress, factProviderWebsite, {from: randomGuy}), EVMRevert);
     });
 
     it('should not allow others to delete fact provider info', async function () {
         const factProvider = accounts[1];
         const factProviderName = "Fact provider name";
+        const factProviderPassportAddress = "0x0000000000000000000000000000000000000001";
+        const factProviderWebsite = "https://www.monetha.io";
         const randomGuy = accounts[2];
 
-        await factProviderRegistry.setFactProviderInfo(factProvider, factProviderName, {from: factProviderRegistryOwner});
+        await factProviderRegistry.setFactProviderInfo(factProvider, factProviderName, factProviderPassportAddress, factProviderWebsite, {from: factProviderRegistryOwner});
 
         const info = await factProviderRegistry.factProviders(factProvider);
         assert.isTrue(info[0]);
