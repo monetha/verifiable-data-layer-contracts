@@ -11,25 +11,44 @@
 
 Currently implemented model: 
 
-                     ╔═══════════════════════════════╗
-                     ║     PassportLogicRegistry     ║
-                     ║  ┌─────────────────────────┐  ║
-                     ║  │    versions mapping     │──╬────────────────────┬─────────────────────┐
-                     ║  └─────────────────────────┘  ║                    │                     │
-                     ║  ┌─────────────────────────┐  ║                  v0.1                  v0.2
-            ┌────────╬─▶│ current passport logic  │──╬───┐                │                     │
-            │        ║  └─────────────────────────┘  ║   │                │                     │
-            │        ╚═══════════════════════════════╝   │      ╔═══════════════════╗ ╔═══════════════════╗
-      gets current                                       │      ║                   ║ ║                   ║
-        passport                                         └──────║   PassportLogic   ║ ║  PassportLogicV2  ║
-          logic                                                 ║                   ║ ║                   ║
-            │                                                   ╚═══════════════════╝ ╚═══════════════════╝
-            │                                                             ▲
-    ╔══════════════╗                                                      │
-    ║              ║                   delegate call
-    ║   Passport   ║─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┘
-    ║              ║
-    ╚══════════════╝
+                              ╔═══════════════════╗
+          creates             ║                   ║
+    ┌─────passport────────────║  PassportFactory  ║
+    │                         ║                   ║
+    │                         ╚═══════════════════╝
+    │
+    │                   ╔═══════════════════════════════╗
+    │                   ║     PassportLogicRegistry     ║
+    │                   ║  ┌─────────────────────────┐  ║
+    │                   ║  │    versions mapping     │──╬────────────────────┬─────────────────────┐
+    │                   ║  └─────────────────────────┘  ║                    │                     │
+    │                   ║  ┌─────────────────────────┐  ║                  v0.1                  v0.2
+    │          ┌────────╬─▶│ current passport logic  │──╬───┐                │                     │
+    │          │        ║  └─────────────────────────┘  ║   │                │                     │
+    │          │        ╚═══════════════════════════════╝   │      ╔═══════════════════╗ ╔═══════════════════╗
+    │    gets current                                       │      ║                   ║ ║                   ║
+    │      passport                                         └──────║   PassportLogic   ║ ║  PassportLogicV2  ║
+    │        logic                                                 ║                   ║ ║                   ║
+    │          │                                                   ╚═══════════════════╝ ╚═══════════════════╝
+    │          │                                                             ▲
+    │  ╔═══════╩══════╗                                                      │
+    │  ║   Passport   ║                   delegate call                      │
+    ├─▶║  (owner 1)   ║─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┤
+    │  ║              ║                                                      │
+    │  ╚═══════╦══════╝                                                      │
+    │          │                                                             │
+    │  ╔═══════╩══════╗                                                      │
+    │  ║   Passport   ║                   delegate call                      │
+    ├─▶║  (owner 2)   ║─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┘
+    │  ║              ║                                                      │
+    │  ╚═══════╦══════╝
+    │         ...                                                            │
+    │          │
+    │  ╔══════════════╗                                                      │
+    │  ║   Passport   ║                   delegate call
+    └─▶║  (owner N)   ║─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┘
+       ║              ║
+       ╚══════════════╝
 
 ### Passport logic
 
@@ -62,8 +81,12 @@ owner (the ownership needs to be claimed).
 
 ### Passport factory
 
+[`PassportFactory`](contracts/PassportFactory.sol) contract allows you to deploy new passport contract.
+
 TODO
 
 ### Fact provider registry
+
+[`FactProviderRegistry`](contracts/FactProviderRegistry.sol)
 
 TODO
