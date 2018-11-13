@@ -9,6 +9,10 @@
 
 ## Protocol design
 
+The main idea of protocol contracts is that the passports are data storage owned by users, but they all share the same 
+passport logic contract. This means that all the methods of the passport logic contract are executed in 
+the context of the data of the passport contract through which they were called.
+
 Currently implemented model: 
 
                               ╔═══════════════════╗
