@@ -1,6 +1,6 @@
 # Protocol contracts
 
-* [Protocol desing](#protocol-design)
+* [Protocol design](#protocol-design)
     * [Passport logic](#passport-logic)
     * [Passport logic registry](#passport-logic-registry)
     * [Passport](#passport)
