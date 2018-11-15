@@ -1,16 +1,17 @@
-# Protocol contracts
+# Monetha: Decentralized Reputation Platform
 
-* [Protocol design](#protocol-design)
+* [Reputation Protocol Contracts design](#reputation-protocol-contracts-design)
+* Reputation Passport
     * [Passport logic](#passport-logic)
     * [Passport logic registry](#passport-logic-registry)
     * [Passport](#passport)
-    * [Passport factory](#passport-factory)
-    * [Fact provider registry](#fact-provider-registry)
+* [Passport factory](#passport-factory)
+* [Facts provider registry](#facts-provider-registry)
 
-## Protocol design
+## Reputation Protocol contracts design
 
-The main idea of protocol contracts is that the passports are data storage owned by users, but they all share the same 
-passport logic contract. This means that all the methods of the passport logic contract are executed in 
+The main idea behind our implementation is that the reputation passport is data storage owned by users, but all passports share the same 
+contract that handles the logic. All the methods of the passport logic contract are executed in 
 the context of the data of the passport contract through which they were called.
 
 Currently implemented model: 
@@ -88,7 +89,7 @@ owner (the ownership needs to be claimed).
 
 ### Passport factory
 
-[`PassportFactory`](contracts/PassportFactory.sol) contract allows anyone to deploy a new passport contract. To deploy a passport one 
+[`PassportFactory`](contracts/PassportFactory.sol) contract allows anyone to deploy a new Reputation passport. To deploy a reputation passport one 
 should call the passport factory's `createPassport()` method. During this call the passport factory deploys a new passport 
 and binds it to the existing `PassportLogicRegistry` contract. It also emits `PassportCreated(address indexed passport, address indexed owner)`
 event that allows you to get the address of the deployed passport.
@@ -96,11 +97,11 @@ event that allows you to get the address of the deployed passport.
 After the passport contract is deployed, the same account who called the passport factory's `createPassport()` method should 
 additionally call the passport's `claimOwnership()` method to finalize the ownership transfer of the passport.
 
-### Fact provider registry
+### Facts provider registry
 
 [`FactProviderRegistry`](contracts/FactProviderRegistry.sol) contract behaves like a naming system for the known fact providers.
 It associates various information (like name, passport address, website) with the fact provider address. `factProviders` mapping 
-should be used to get this information by the fact provider address:
+should be used to get this information by the facts provider address:
 
 ```solidity
     struct FactProviderInfo {
