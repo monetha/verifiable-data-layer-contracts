@@ -6,6 +6,10 @@ import "../ownership/ClaimableProxy.sol";
 // Do not change the order of the fields, аdd new fields to the end of the contract!
 contract Storage is ClaimableProxy
 {
+    /***************************************************************************
+     *** STORAGE VARIABLES. DO NOT REORDER!!! ADD NEW VARIABLE TO THE END!!! ***
+     ***************************************************************************/
+
     struct AddressValue {
         bool initialized;
         address value;
@@ -57,6 +61,17 @@ contract Storage is ClaimableProxy
 
     bool private onlyFactProviderFromWhitelistAllowed;
     mapping(address => bool) private factProviderWhitelist;
+
+    struct IPFSHashValue {
+        bool initialized;
+        string value;
+    }
+
+    mapping(address => mapping(bytes32 => IPFSHashValue)) internal ipfsHashStorage;
+
+    /***************************************************************************
+     *** END OF SECTION OF STORAGE VARIABLES                                 ***
+     ***************************************************************************/
 
     event WhitelistOnlyPermissionSet(bool indexed onlyWhitelist);
     event WhitelistFactProviderAdded(address indexed factProvider);
