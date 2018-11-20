@@ -1,6 +1,6 @@
-# Monetha: Decentralized Reputation Platform
+# Monetha: Decentralized Reputation Framework
 
-* [Reputation Protocol Contracts design](#reputation-protocol-contracts-design)
+* [Reputation Layer Contracts design](#reputation-layer-contracts-design)
 * Reputation Passport
     * [Passport logic](#passport-logic)
     * [Passport logic registry](#passport-logic-registry)
@@ -8,7 +8,7 @@
 * [Passport factory](#passport-factory)
 * [Facts provider registry](#facts-provider-registry)
 
-## Reputation Protocol contracts design
+## Reputation Layer contracts design
 
 The main idea behind our implementation is that the reputation passport is data storage owned by users, but all passports share the same 
 contract that handles the logic. All the methods of the passport logic contract are executed in 
