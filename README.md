@@ -1,5 +1,7 @@
 # Monetha: Decentralized Reputation Framework
 
+# Reputation Layer
+
 * [Reputation Layer Contracts design](#reputation-layer-contracts-design)
 * Reputation Passport
     * [Passport logic](#passport-logic)
