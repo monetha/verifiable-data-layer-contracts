@@ -1,7 +1,7 @@
 {
   "name": "protocol-contracts",
   "version": "1.0.0",
-  "description": "Protocol contracts",
+  "description": "Reputation contracts",
   "main": "truffle.js",
   "dependencies": {
     "chai": "^4.1.2",
