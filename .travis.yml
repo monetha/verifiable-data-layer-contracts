@@ -1,0 +1,28 @@
+language: node_js
+sudo: required
+
+node_js:
+  - "9"
+
+cache:
+  directories:
+    - node_modules
+
+before_install:
+  - sudo apt-get -qq update
+  - sudo apt-get install -y jq
+
+install:
+  - npm install
+
+script:
+  - npm run compile
+  - npm run test
+
+after_success:
+  - for file in build/contracts/*.json; do jq '.abi' < "$file" > "${file%.json}.abi"; done
+  - for file in build/contracts/*.json; do jq -r '.bytecode' < "$file" > "${file%.json}.bin"; done
+  - mkdir artifacts && for solfile in contracts/*.sol; do ./node_modules/.bin/truffle-flattener $solfile > artifacts/${solfile##*/}; done
+  - for file in contracts/*.sol; do f=$(basename -- ${file%.*}); cp "build/contracts/${f}.abi" artifacts/; cp "build/contracts/${f}.bin" artifacts/; done
+  - 'echo "Compiler: $(./node_modules/.bin/solcjs --version)" > artifacts/README.md'
+  - 'echo "Contracts commit: ${CI_COMMIT_SHA}" >> artifacts/README.md'
