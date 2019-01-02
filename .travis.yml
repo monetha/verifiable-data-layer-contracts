@@ -30,6 +30,7 @@ after_success:
 
 addons:
   artifacts:
+    s3_region: "eu-west-1"
     working_dir: artifacts
     paths:
       - reputation-contracts.zip
