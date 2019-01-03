@@ -37,3 +37,18 @@ addons:
       - reputation-contracts.zip
     target_paths:
       - /$TRAVIS_REPO_SLUG/$TRAVIS_COMMIT
+
+before_deploy:
+  - cp artifacts/reputation-contracts.zip artifacts/reputation-contracts-${TRAVIS_TAG}.zip
+
+deploy:
+  provider: releases
+  api_key:
+    secure: xIhJUx8tzIgC5skh7gIWHz7NLHy6H5K/xrESLN1KqktTvFURKsFwLkAusKpce163g1DqvgeKYhd2rXcvsc8rqMBibLEA2FVJCbeAKcXjhxWXV+TlbarQdFIZSYKqNMwxu82YjfN16ITJO2MtSUepmax0tTPdtK03U6j1ZlNrlthJi62hLTc6vxEXL66FNY8JxtkTmY9jdqnHZhwMDefGRCFdK+5DqBSIIe+VEqeCGoYWQcZzkNZZk6nVO5/CzufpdfDPuWSX1fw+OchY0yI/txSJacDEqLmLXuW7WWRuT8CD7EdIzBT6FKUWfI5omGP04co4eR38WTuP3YnVr4T1O3ENw6QAPHgxCE2mmAFi4WYI88RVzHBtsNWnlXcsN+1gb9zj61yPntMQqZgOtvblJTqynBXcG2F1iWk6v8fhdPZudlkuAWdozON+IpxDYvktHpiRBRaZGeOuYzLL4Z3rbntrOYMYkr3JEbKq+lt3hpSS9TpDRtwXpLwX6bGuJQcZYouq6TG7R1SW1aLpP5VDH4FlENlNFchcDV5d2cNuuRNZ2dXzyt4BryW3K9dHeXxaY5ZF546k8tSLtH71nM0nZBNBxHfSjBnZYay5ja+HCPipIqx2hChwVe3M+evJevmtuPGh0MshtPJWf4lgb7xIbxT1mOWNARzIzFYUg5i43eE=
+  file: artifacts/reputation-contracts-${TRAVIS_TAG}.zip
+  skip_cleanup: true
+  overwrite: true
+  draft: true
+  on:
+    repo: monetha/reputation-contracts
+    tags: true
