@@ -1,5 +1,5 @@
 {
-  "name": "protocol-contracts",
+  "name": "reputation-contracts",
   "version": "1.0.0",
   "description": "Reputation contracts",
   "main": "truffle.js",
