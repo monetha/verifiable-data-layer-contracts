@@ -33,15 +33,6 @@ contract Passport is Proxy, ClaimableProxy, DestructibleProxy {
     }
 
     /**
-     * @dev Changes the passport logic registry.
-     * @param _registry Address of the new passport implementations registry.
-     */
-    function changePassportLogicRegistry(IPassportLogicRegistry _registry) public onlyOwner {
-        emit PassportLogicRegistryChanged(address(_getRegistry()), address(_registry));
-        _setRegistry(_registry);
-    }
-
-    /**
      * @return the address of passport logic registry.
      */
     function getPassportLogicRegistry() public view returns (address) {
