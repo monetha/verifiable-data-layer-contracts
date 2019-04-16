@@ -69,6 +69,18 @@ contract Storage is ClaimableProxy
 
     mapping(address => mapping(bytes32 => IPFSHashValue)) internal ipfsHashStorage;
 
+    struct PrivateData {
+        string dataIPFSHash; // The IPFS hash of encrypted private data
+        bytes32 keyHash;     // The hash of symmetric key that was used to encrypt the data
+    }
+
+    struct PrivateDataValue {
+        bool initialized;
+        PrivateData value;
+    }
+
+    mapping(address => mapping(bytes32 => PrivateDataValue)) internal privateDataStorage;
+
     /***************************************************************************
      *** END OF SECTION OF STORAGE VARIABLES                                 ***
      ***************************************************************************/

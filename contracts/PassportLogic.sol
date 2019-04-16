@@ -10,6 +10,7 @@ import "./storage/StringStorageLogic.sol";
 import "./storage/BytesStorageLogic.sol";
 import "./storage/TxDataStorageLogic.sol";
 import "./storage/IPFSStorageLogic.sol";
+import "./storage/PrivateDataStorageLogic.sol";
 
 contract PassportLogic
 is IPassportLogic
@@ -22,4 +23,5 @@ is IPassportLogic
 , BytesStorageLogic
 , TxDataStorageLogic
 , IPFSStorageLogic
+, PrivateDataStorageLogic
 {}
