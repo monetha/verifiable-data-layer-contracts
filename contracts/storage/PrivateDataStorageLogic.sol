@@ -12,6 +12,7 @@ contract PrivateDataStorageLogic is Storage {
     event PrivateDataExchangeProposed(uint256 indexed exchangeIdx, address indexed dataRequester, address indexed passportOwner);
     event PrivateDataExchangeAccepted(uint256 indexed exchangeIdx, address indexed dataRequester, address indexed passportOwner);
     event PrivateDataExchangeClosed(uint256 indexed exchangeIdx);
+    event PrivateDataExchangeDisputed(uint256 indexed exchangeIdx, bool indexed successful, address indexed cheater);
 
     uint256 constant private proposedTimeout = 1 days;
     uint256 constant private acceptedTimeout = 1 days;
@@ -124,6 +125,38 @@ contract PrivateDataStorageLogic is Storage {
         _decOpenPrivateDataExchangeCount();
 
         emit PrivateDataExchangeClosed(_exchangeIdx);
+    }
+
+    /// @param _exchangeIdx The private data exchange index
+    /// @param _exchangeKey The unencrypted exchange session key
+    function disputePrivateDataExchange(uint256 _exchangeIdx, bytes32 _exchangeKey) external {
+        require(_exchangeIdx < privateDataExchanges.length, "invalid exchange index");
+        PrivateDataExchange storage exchange = privateDataExchanges[_exchangeIdx];
+        require(PrivateDataExchangeState.Accepted == exchange.state, "exchange must be in accepted state");
+        require(msg.sender == exchange.dataRequester, "only data requester allowed");
+        require(now < exchange.stateExpired, "exchange must not be expired");
+        require(keccak256(abi.encodePacked(_exchangeKey)) == exchange.exchangeKeyHash, "exchange key hash must match");
+
+        bytes32 dataKey = _exchangeKey ^ exchange.encryptedDataKey; // data symmetric key is XORed with exchange key
+        bool validDataKey = keccak256(abi.encodePacked(dataKey)) == exchange.dataKeyHash;
+
+        exchange.state = PrivateDataExchangeState.Closed;
+
+        uint256 val = exchange.dataRequesterValue.add(exchange.passportOwnerValue);
+
+        address cheater;
+        if (validDataKey) { // the data key was valid -> data requester cheated
+            require(exchange.passportOwner.send(val));
+            cheater = exchange.dataRequester;
+        } else { // the data key is invalid -> passport owner cheated
+            require(exchange.dataRequester.send(val));
+            cheater = exchange.passportOwner;
+        }
+
+        _decOpenPrivateDataExchangeCount();
+
+        emit PrivateDataExchangeClosed(_exchangeIdx);
+        emit PrivateDataExchangeDisputed(_exchangeIdx, !validDataKey, cheater);
     }
 
     function _incOpenPrivateDataExchangeCount() internal { openPrivateDataExchangeCount = openPrivateDataExchangeCount + 1; }
