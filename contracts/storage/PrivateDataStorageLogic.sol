@@ -108,6 +108,24 @@ contract PrivateDataStorageLogic is Storage {
         emit PrivateDataExchangeClosed(_exchangeIdx);
     }
 
+    /// @param _exchangeIdx The private data exchange index
+    function timeoutPrivateDataExchange(uint256 _exchangeIdx) external {
+        require(_exchangeIdx < privateDataExchanges.length, "invalid exchange index");
+        PrivateDataExchange storage exchange = privateDataExchanges[_exchangeIdx];
+        require(PrivateDataExchangeState.Proposed == exchange.state, "exchange must be in proposed state");
+        require(msg.sender == exchange.dataRequester, "only data requester allowed");
+        require(now > exchange.stateExpired, "exchange must be expired");
+
+        exchange.state = PrivateDataExchangeState.Closed;
+
+        // return staked amount to data requester
+        require(exchange.dataRequester.send(exchange.dataRequesterValue));
+
+        _decOpenPrivateDataExchangeCount();
+
+        emit PrivateDataExchangeClosed(_exchangeIdx);
+    }
+
     function _incOpenPrivateDataExchangeCount() internal { openPrivateDataExchangeCount = openPrivateDataExchangeCount + 1; }
     function _decOpenPrivateDataExchangeCount() internal { openPrivateDataExchangeCount = openPrivateDataExchangeCount - 1; }
 
