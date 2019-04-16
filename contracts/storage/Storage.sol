@@ -71,7 +71,7 @@ contract Storage is ClaimableProxy
 
     struct PrivateData {
         string dataIPFSHash; // The IPFS hash of encrypted private data
-        bytes32 keyHash;     // The hash of symmetric key that was used to encrypt the data
+        bytes32 dataKeyHash; // The hash of symmetric key that was used to encrypt the data
     }
 
     struct PrivateDataValue {
@@ -80,6 +80,27 @@ contract Storage is ClaimableProxy
     }
 
     mapping(address => mapping(bytes32 => PrivateDataValue)) internal privateDataStorage;
+
+    enum PrivateDataExchangeState {Closed, Proposed, Accepted}
+
+    struct PrivateDataExchange {
+        address dataRequester;          // The address of the data requester
+        uint256 dataRequesterValue;     // The amount staked by the data requester
+        address passportOwner;          // The address of the passport owner at the time of the data exchange proposition
+        uint256 passportOwnerValue;     // Tha amount staked by the passport owner
+        address factProvider;           // The private data provider
+        bytes32 key;                    // the key for the private data record
+        string dataIPFSHash;            // The IPFS hash of encrypted private data
+        bytes32 dataKeyHash;            // The hash of data symmetric key that was used to encrypt the data
+        bytes encryptedExchangeKey;     // The encrypted exchange session key (only passport owner can decrypt it)
+        bytes32 exchangeKeyHash;        // The hash of exchange session key
+        bytes32 encryptedDataKey;       // The data symmetric key XORed with the exchange key
+        PrivateDataExchangeState state; // The state of private data exchange
+        uint256 stateExpired;           // The state expiration timestamp
+    }
+
+    uint internal openPrivateDataExchangeCount; // the count of open private data exchanges
+    PrivateDataExchange[] internal privateDataExchanges;
 
     /***************************************************************************
      *** END OF SECTION OF STORAGE VARIABLES                                 ***
