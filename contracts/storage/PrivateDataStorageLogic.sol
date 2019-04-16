@@ -1,16 +1,20 @@
 pragma solidity ^0.4.24;
 
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./Storage.sol";
 
 contract PrivateDataStorageLogic is Storage {
+    using SafeMath for uint256;
+
     event PrivateDataUpdated(address indexed factProvider, bytes32 indexed key);
     event PrivateDataDeleted(address indexed factProvider, bytes32 indexed key);
 
     event PrivateDataExchangeProposed(uint256 indexed exchangeIdx, address indexed dataRequester, address indexed passportOwner);
     event PrivateDataExchangeAccepted(uint256 indexed exchangeIdx, address indexed dataRequester, address indexed passportOwner);
+    event PrivateDataExchangeClosed(uint256 indexed exchangeIdx);
 
-    uint256 constant proposedTimeout = 1 days;
-    uint256 constant acceptedTimeout = 1 days;
+    uint256 constant private proposedTimeout = 1 days;
+    uint256 constant private acceptedTimeout = 1 days;
 
     /// @param _key The key for the record
     /// @param _dataIPFSHash The IPFS hash of encrypted private data
@@ -61,7 +65,8 @@ contract PrivateDataStorageLogic is Storage {
             stateExpired : now + proposedTimeout
             });
         privateDataExchanges.push(exchange);
-        openPrivateDataExchangeCount = openPrivateDataExchangeCount + 1;
+
+        _incOpenPrivateDataExchangeCount();
 
         uint256 exchangeIdx = privateDataExchanges.length - 1;
         emit PrivateDataExchangeProposed(exchangeIdx, msg.sender, passportOwner);
@@ -84,6 +89,27 @@ contract PrivateDataStorageLogic is Storage {
 
         emit PrivateDataExchangeAccepted(_exchangeIdx, exchange.dataRequester, msg.sender);
     }
+
+    /// @param _exchangeIdx The private data exchange index
+    function finishPrivateDataExchange(uint256 _exchangeIdx) external {
+        require(_exchangeIdx < privateDataExchanges.length, "invalid exchange index");
+        PrivateDataExchange storage exchange = privateDataExchanges[_exchangeIdx];
+        require(PrivateDataExchangeState.Accepted == exchange.state, "exchange must be in accepted state");
+        require(now > exchange.stateExpired || msg.sender == exchange.dataRequester, "exchange must be either expired or be finished by the data requester");
+
+        exchange.state = PrivateDataExchangeState.Closed;
+
+        // transfer all exchange staked money to passport owner
+        uint256 val = exchange.dataRequesterValue.add(exchange.passportOwnerValue);
+        require(exchange.passportOwner.send(val));
+
+        _decOpenPrivateDataExchangeCount();
+
+        emit PrivateDataExchangeClosed(_exchangeIdx);
+    }
+
+    function _incOpenPrivateDataExchangeCount() internal { openPrivateDataExchangeCount = openPrivateDataExchangeCount + 1; }
+    function _decOpenPrivateDataExchangeCount() internal { openPrivateDataExchangeCount = openPrivateDataExchangeCount - 1; }
 
     function _setPrivateData(bytes32 _key, string _dataIPFSHash, bytes32 _keyHash) allowedFactProvider internal {
         privateDataStorage[msg.sender][_key] = PrivateDataValue({
