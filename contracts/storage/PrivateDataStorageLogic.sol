@@ -35,6 +35,13 @@ contract PrivateDataStorageLogic is Storage {
         return _getPrivateData(_factProvider, _key);
     }
 
+    /**
+     * @dev returns the number of private data exchanges created.
+     */
+    function getPrivateDataExchangesCount() public constant returns (uint256 count) {
+        return privateDataExchanges.length;
+    }
+
     /// @param _factProvider The fact provider
     /// @param _key The key for the record
     /// @param _encryptedExchangeKey The encrypted exchange session key (only passport owner can decrypt it)
@@ -67,7 +74,7 @@ contract PrivateDataStorageLogic is Storage {
             });
         privateDataExchanges.push(exchange);
 
-        _incOpenPrivateDataExchangeCount();
+        _incOpenPrivateDataExchangesCount();
 
         uint256 exchangeIdx = privateDataExchanges.length - 1;
         emit PrivateDataExchangeProposed(exchangeIdx, msg.sender, passportOwner);
@@ -104,7 +111,7 @@ contract PrivateDataStorageLogic is Storage {
         uint256 val = exchange.dataRequesterValue.add(exchange.passportOwnerValue);
         require(exchange.passportOwner.send(val));
 
-        _decOpenPrivateDataExchangeCount();
+        _decOpenPrivateDataExchangesCount();
 
         emit PrivateDataExchangeClosed(_exchangeIdx);
     }
@@ -122,7 +129,7 @@ contract PrivateDataStorageLogic is Storage {
         // return staked amount to data requester
         require(exchange.dataRequester.send(exchange.dataRequesterValue));
 
-        _decOpenPrivateDataExchangeCount();
+        _decOpenPrivateDataExchangesCount();
 
         emit PrivateDataExchangeClosed(_exchangeIdx);
     }
@@ -153,14 +160,14 @@ contract PrivateDataStorageLogic is Storage {
             cheater = exchange.passportOwner;
         }
 
-        _decOpenPrivateDataExchangeCount();
+        _decOpenPrivateDataExchangesCount();
 
         emit PrivateDataExchangeClosed(_exchangeIdx);
         emit PrivateDataExchangeDisputed(_exchangeIdx, !validDataKey, cheater);
     }
 
-    function _incOpenPrivateDataExchangeCount() internal { openPrivateDataExchangeCount = openPrivateDataExchangeCount + 1; }
-    function _decOpenPrivateDataExchangeCount() internal { openPrivateDataExchangeCount = openPrivateDataExchangeCount - 1; }
+    function _incOpenPrivateDataExchangesCount() internal { openPrivateDataExchangesCount = openPrivateDataExchangesCount + 1; }
+    function _decOpenPrivateDataExchangesCount() internal { openPrivateDataExchangesCount = openPrivateDataExchangesCount - 1; }
 
     function _setPrivateData(bytes32 _key, string _dataIPFSHash, bytes32 _keyHash) allowedFactProvider internal {
         privateDataStorage[msg.sender][_key] = PrivateDataValue({

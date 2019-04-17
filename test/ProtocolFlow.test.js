@@ -1,6 +1,7 @@
 const {expectThrow} = require('./helpers/expectThrow');
 const {EVMRevert} = require('./helpers/EVMRevert');
 const expectEvent = require('./helpers/expectEvent');
+const {txTimestamp} = require('./helpers/txTimestamp');
 
 const Passport = artifacts.require('Passport');
 const PassportLogic = artifacts.require('PassportLogic');
@@ -16,12 +17,33 @@ contract('Passport', function (accounts) {
     let factProvider;
     let factProvider2;
 
+    let dataRequester;
+
+    const ExchangeField = {
+        DataRequester: 0,
+        DataRequesterValue: 1,
+        PassportOwner: 2,
+        PassportOwnerValue: 3,
+        FactProvider: 4,
+        Key: 5,
+        DataIPFSHash: 6,
+        DataKeyHash: 7,
+        EncryptedExchangeKey: 8,
+        ExchangeKeyHash: 9,
+        EncryptedDataKey: 10,
+        State: 11,
+        StateExpired: 12
+    };
+    const ExchangeState = {Closed : 0, Proposed: 1, Accepted: 2};
+    const oneDayInseconds = 24 * 60 * 60;
+
     beforeEach(async function () {
         const monethaOwner = accounts[0];
         passportOwner = accounts[1];
         newOwner = accounts[2];
         factProvider = accounts[3];
         factProvider2 = accounts[4];
+        dataRequester = accounts[5];
 
         const passportLogic = await PassportLogic.new({from: monethaOwner});
         const passportLogicRegistry = await PassportLogicRegistry.new("0.1", passportLogic.address, {from: monethaOwner});
@@ -209,34 +231,89 @@ contract('Passport', function (accounts) {
     it('should allow to store and read private data', async() => {
         const key = '0x1234567890123456789000000000000000000000000000000000000000000000';
         const dataIPFSHash = "Qmblahblahblah";
-        const keyHash = '0x736f6d6520686173680000000000000000000000000000000000000000000000';
+        const dataKeyHash = '0xbf65a1dee556a1db9c581a334f964d04b65a50a8dc881b93012a9cf53c2a6f3c';
 
-        let tx = passportAsLogic.setPrivateData(key, dataIPFSHash, keyHash, {from: factProvider});
+        let tx = passportAsLogic.setPrivateData(key, dataIPFSHash, dataKeyHash, {from: factProvider});
         await expectEvent.inTransaction(tx,"PrivateDataUpdated", {factProvider: factProvider, key: key});
 
         const [success, getDataIPFSHash, getDataKeyHash] = await passportAsLogic.getPrivateData(factProvider, key);
         assert.isTrue(success);
         assert.equal(dataIPFSHash, getDataIPFSHash);
-        assert.equal(keyHash, getDataKeyHash);
+        assert.equal(dataKeyHash, getDataKeyHash);
     });
 
-    it('should allow fact provider to delete private data', async function () {
+    it('should allow fact provider to delete private data', async() => {
         const key = '0x1234567890123456789000000000000000000000000000000000000000000000';
         const dataIPFSHash = "Qmblahblahblah";
-        const keyHash = '0x736f6d6520686173680000000000000000000000000000000000000000000000';
+        const dataKeyHash = '0xbf65a1dee556a1db9c581a334f964d04b65a50a8dc881b93012a9cf53c2a6f3c';
 
-        let tx = passportAsLogic.setPrivateData(key, dataIPFSHash, keyHash, {from: factProvider});
+        let tx = passportAsLogic.setPrivateData(key, dataIPFSHash, dataKeyHash, {from: factProvider});
         await expectEvent.inTransaction(tx,"PrivateDataUpdated", {factProvider: factProvider, key: key});
 
         const [success, getDataIPFSHash, getDataKeyHash] = await passportAsLogic.getPrivateData(factProvider, key);
         assert.isTrue(success);
         assert.equal(dataIPFSHash, getDataIPFSHash);
-        assert.equal(keyHash, getDataKeyHash);
+        assert.equal(dataKeyHash, getDataKeyHash);
 
         let tx2 = passportAsLogic.deletePrivateData(key, {from: factProvider});
         await expectEvent.inTransaction(tx2,"PrivateDataDeleted", {factProvider: factProvider, key: key});
 
         const [success2] = await passportAsLogic.getPrivateData(factProvider, key);
         assert.isFalse(success2);
+    });
+
+    it('should allow to propose private data exchange', async () => {
+        const key = '0x1234567890123456789000000000000000000000000000000000000000000000';
+        const dataIPFSHash = "Qmblahblahblah";
+        const dataKeyHash = '0xbf65a1dee556a1db9c581a334f964d04b65a50a8dc881b93012a9cf53c2a6f3c';
+
+        // exchange key:      0x5c221e572354457236e2ae6fc1b3f0e868fd0456c7d5f5e1799c22a0e8548826
+        // exchange key hash: 0xa9528b0b967627d1c5c092548d9697988b161bbb868f58671d7cfbe98f708745
+        //
+        // data key:      0x85e2cd9bf60f3b2e5d81608c47283d2d8527e9a4b4753f0e6f5e308510b2a6d8
+        // data key hash: 0xbf65a1dee556a1db9c581a334f964d04b65a50a8dc881b93012a9cf53c2a6f3c
+        //
+        // exchange key XOR data key: 0xd9c0d3ccd55b7e5c6b63cee3869bcdc5eddaedf273a0caef16c21225f8e62efe (encrypted data key)
+        const encryptedExchangeKey = web3.toHex('it is encrypted exchange key');
+        const exchangeKeyHash = '0xa9528b0b967627d1c5c092548d9697988b161bbb868f58671d7cfbe98f708745';
+        const exchangeStake = 10000000;
+
+        let tx = passportAsLogic.setPrivateData(key, dataIPFSHash, dataKeyHash, {from: factProvider});
+        await expectEvent.inTransaction(tx, "PrivateDataUpdated", {factProvider: factProvider, key: key});
+
+        const exchangesCount = await passportAsLogic.getPrivateDataExchangesCount();
+        let passportBalance = await web3.eth.getBalance(passportAsLogic.address);
+
+        let proposeTx = await passportAsLogic.proposePrivateDataExchange(factProvider, key, encryptedExchangeKey, exchangeKeyHash, {
+            from: dataRequester,
+            value: exchangeStake
+        });
+        await expectEvent.inTransaction(proposeTx, "PrivateDataExchangeProposed", {
+            exchangeIdx: exchangesCount,
+            dataRequester: dataRequester,
+            passportOwner: passportOwner
+        });
+        const proposeTxTimestamp = txTimestamp(proposeTx);
+
+        const exchangesCount2 = await passportAsLogic.getPrivateDataExchangesCount();
+        exchangesCount2.should.be.bignumber.equal(exchangesCount.add(1));
+
+        let passportBalance2 = await web3.eth.getBalance(passportAsLogic.address);
+        passportBalance2.should.be.bignumber.equal(passportBalance.add(exchangeStake));
+
+        const exchange = await passportAsLogic.privateDataExchanges(exchangesCount);
+        assert.equal(exchange[ExchangeField.DataRequester], dataRequester);
+        exchange[ExchangeField.DataRequesterValue].should.be.bignumber.equal(exchangeStake);
+        assert.equal(exchange[ExchangeField.PassportOwner], passportOwner);
+        exchange[ExchangeField.PassportOwnerValue].should.be.bignumber.equal(0);
+        assert.equal(exchange[ExchangeField.FactProvider], factProvider);
+        assert.equal(exchange[ExchangeField.Key], key);
+        assert.equal(exchange[ExchangeField.DataIPFSHash], dataIPFSHash);
+        assert.equal(exchange[ExchangeField.DataKeyHash], dataKeyHash);
+        assert.equal(exchange[ExchangeField.EncryptedExchangeKey], encryptedExchangeKey);
+        assert.equal(exchange[ExchangeField.ExchangeKeyHash], exchangeKeyHash);
+        assert.equal(exchange[ExchangeField.EncryptedDataKey], '0x0000000000000000000000000000000000000000000000000000000000000000');
+        assert.equal(exchange[ExchangeField.State], ExchangeState.Proposed);
+        exchange[ExchangeField.StateExpired].should.be.bignumber.equal(proposeTxTimestamp + oneDayInseconds);
     });
 });
