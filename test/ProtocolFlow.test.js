@@ -1,5 +1,6 @@
 const {expectThrow} = require('./helpers/expectThrow');
 const {EVMRevert} = require('./helpers/EVMRevert');
+const expectEvent = require('./helpers/expectEvent');
 
 const Passport = artifacts.require('Passport');
 const PassportLogic = artifacts.require('PassportLogic');
@@ -206,11 +207,12 @@ contract('Passport', function (accounts) {
     });
 
     it('should allow to store and read private data', async() => {
-        const key = web3.toHex('test');
+        const key = '0x1234567890123456789000000000000000000000000000000000000000000000';
         const dataIPFSHash = "Qmblahblahblah";
         const keyHash = '0x736f6d6520686173680000000000000000000000000000000000000000000000';
 
-        await passportAsLogic.setPrivateData(key, dataIPFSHash, keyHash, {from: factProvider});
+        let tx = passportAsLogic.setPrivateData(key, dataIPFSHash, keyHash, {from: factProvider});
+        await expectEvent.inTransaction(tx,"PrivateDataUpdated", {factProvider: factProvider, key: key});
 
         const [success, getDataIPFSHash, getDataKeyHash] = await passportAsLogic.getPrivateData(factProvider, key);
         assert.isTrue(success);
@@ -219,18 +221,20 @@ contract('Passport', function (accounts) {
     });
 
     it('should allow fact provider to delete private data', async function () {
-        const key = web3.toHex('test');
+        const key = '0x1234567890123456789000000000000000000000000000000000000000000000';
         const dataIPFSHash = "Qmblahblahblah";
         const keyHash = '0x736f6d6520686173680000000000000000000000000000000000000000000000';
 
-        await passportAsLogic.setPrivateData(key, dataIPFSHash, keyHash, {from: factProvider});
+        let tx = passportAsLogic.setPrivateData(key, dataIPFSHash, keyHash, {from: factProvider});
+        await expectEvent.inTransaction(tx,"PrivateDataUpdated", {factProvider: factProvider, key: key});
 
         const [success, getDataIPFSHash, getDataKeyHash] = await passportAsLogic.getPrivateData(factProvider, key);
         assert.isTrue(success);
         assert.equal(dataIPFSHash, getDataIPFSHash);
         assert.equal(keyHash, getDataKeyHash);
 
-        await passportAsLogic.deletePrivateData(key, {from: factProvider});
+        let tx2 = passportAsLogic.deletePrivateData(key, {from: factProvider});
+        await expectEvent.inTransaction(tx2,"PrivateDataDeleted", {factProvider: factProvider, key: key});
 
         const [success2] = await passportAsLogic.getPrivateData(factProvider, key);
         assert.isFalse(success2);
