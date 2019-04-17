@@ -261,11 +261,11 @@ contract('Passport', function (accounts) {
                 });
 
                 it('should allow fact provider to delete private data', async () => {
-                    let tx2 = passportAsLogic.deletePrivateData(key, {from: factProvider});
-                    await expectEvent.inTransaction(tx2, "PrivateDataDeleted", {factProvider: factProvider, key: key});
+                    const tx = passportAsLogic.deletePrivateData(key, {from: factProvider});
+                    await expectEvent.inTransaction(tx, "PrivateDataDeleted", {factProvider: factProvider, key: key});
 
-                    const [success2] = await passportAsLogic.getPrivateData(factProvider, key);
-                    assert.isFalse(success2);
+                    const [success] = await passportAsLogic.getPrivateData(factProvider, key);
+                    assert.isFalse(success);
                 });
             });
 
@@ -300,8 +300,8 @@ contract('Passport', function (accounts) {
                     });
 
                     it('should increment total count of private data exchanges', async () => {
-                        const exchangesCount2 = await passportAsLogic.getPrivateDataExchangesCount();
-                        exchangesCount2.should.be.bignumber.equal(exchangeIdx.add(1));
+                        const exchangesCount = await passportAsLogic.getPrivateDataExchangesCount();
+                        exchangesCount.should.be.bignumber.equal(exchangeIdx.add(1));
                     });
 
                     it('should increment passport contract balance', async () => {
