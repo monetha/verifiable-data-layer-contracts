@@ -18,6 +18,7 @@ contract('Passport', function (accounts) {
     let factProvider2;
 
     let dataRequester;
+    let proposeTimeout;
 
     const ExchangeField = {
         DataRequester: 0,
@@ -35,7 +36,6 @@ contract('Passport', function (accounts) {
         StateExpired: 12
     };
     const ExchangeState = {Closed : 0, Proposed: 1, Accepted: 2};
-    const oneDayInseconds = 24 * 60 * 60;
 
     beforeEach(async function () {
         const monethaOwner = accounts[0];
@@ -53,6 +53,8 @@ contract('Passport', function (accounts) {
         passport = Passport.at(createPassportTx.logs[0].args.passport);
         passportAsLogic = PassportLogic.at(passport.address);
         await passport.claimOwnership({from: passportOwner});
+
+        proposeTimeout = await passportAsLogic.privateDataExchangeProposeTimeout();
     });
 
     it('should have the correct owner', async function () {
@@ -314,6 +316,6 @@ contract('Passport', function (accounts) {
         assert.equal(exchange[ExchangeField.ExchangeKeyHash], exchangeKeyHash);
         assert.equal(exchange[ExchangeField.EncryptedDataKey], '0x0000000000000000000000000000000000000000000000000000000000000000');
         assert.equal(exchange[ExchangeField.State], ExchangeState.Proposed);
-        exchange[ExchangeField.StateExpired].should.be.bignumber.equal(proposeTxTimestamp + oneDayInseconds);
+        exchange[ExchangeField.StateExpired].should.be.bignumber.equal(proposeTimeout.add(proposeTxTimestamp));
     });
 });

@@ -14,8 +14,8 @@ contract PrivateDataStorageLogic is Storage {
     event PrivateDataExchangeClosed(uint256 indexed exchangeIdx);
     event PrivateDataExchangeDisputed(uint256 indexed exchangeIdx, bool indexed successful, address indexed cheater);
 
-    uint256 constant private proposedTimeout = 1 days;
-    uint256 constant private acceptedTimeout = 1 days;
+    uint256 constant public privateDataExchangeProposeTimeout = 1 days;
+    uint256 constant public privateDataExchangeAcceptTimeout = 1 days;
 
     /// @param _key The key for the record
     /// @param _dataIPFSHash The IPFS hash of encrypted private data
@@ -70,7 +70,7 @@ contract PrivateDataStorageLogic is Storage {
             exchangeKeyHash : _exchangeKeyHash,
             encryptedDataKey : encryptedDataKey,
             state : PrivateDataExchangeState.Proposed,
-            stateExpired : now + proposedTimeout
+            stateExpired : now + privateDataExchangeProposeTimeout
             });
         privateDataExchanges.push(exchange);
 
@@ -93,7 +93,7 @@ contract PrivateDataStorageLogic is Storage {
         exchange.passportOwnerValue = msg.value;
         exchange.encryptedDataKey = _encryptedDataKey;
         exchange.state = PrivateDataExchangeState.Accepted;
-        exchange.stateExpired = now + acceptedTimeout;
+        exchange.stateExpired = now + privateDataExchangeAcceptTimeout;
 
         emit PrivateDataExchangeAccepted(_exchangeIdx, exchange.dataRequester, msg.sender);
     }
