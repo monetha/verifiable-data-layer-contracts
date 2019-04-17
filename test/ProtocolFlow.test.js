@@ -2,6 +2,7 @@ const {expectThrow} = require('./helpers/expectThrow');
 const {EVMRevert} = require('./helpers/EVMRevert');
 const expectEvent = require('./helpers/expectEvent');
 const {txTimestamp} = require('./helpers/txTimestamp');
+const {increaseTime} = require("./helpers/increaseTime");
 
 const Passport = artifacts.require('Passport');
 const PassportLogic = artifacts.require('PassportLogic');
