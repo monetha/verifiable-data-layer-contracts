@@ -233,174 +233,150 @@ contract('Passport', function (accounts) {
         await expectThrow(passportAsLogic.deleteString(key, {from: factProvider}), EVMRevert);
     });
 
-    it('should allow to store and read private data', async() => {
-        const key = '0x1234567890123456789000000000000000000000000000000000000000000000';
-        const dataIPFSHash = "Qmblahblahblah";
-        const dataKeyHash = '0xbf65a1dee556a1db9c581a334f964d04b65a50a8dc881b93012a9cf53c2a6f3c';
+    describe('private data', () => {
 
-        let tx = passportAsLogic.setPrivateData(key, dataIPFSHash, dataKeyHash, {from: factProvider});
-        await expectEvent.inTransaction(tx,"PrivateDataUpdated", {factProvider: factProvider, key: key});
+        describe('when fact provider provided private data', () => {
+            const key = '0x1234567890123456789000000000000000000000000000000000000000000000';
+            const dataIPFSHash = "Qmblahblahblah";
+            // data key:      0x85e2cd9bf60f3b2e5d81608c47283d2d8527e9a4b4753f0e6f5e308510b2a6d8
+            // data key hash: 0xbf65a1dee556a1db9c581a334f964d04b65a50a8dc881b93012a9cf53c2a6f3c
+            const dataKeyHash = '0xbf65a1dee556a1db9c581a334f964d04b65a50a8dc881b93012a9cf53c2a6f3c';
 
-        const [success, getDataIPFSHash, getDataKeyHash] = await passportAsLogic.getPrivateData(factProvider, key);
-        assert.isTrue(success);
-        assert.equal(dataIPFSHash, getDataIPFSHash);
-        assert.equal(dataKeyHash, getDataKeyHash);
-    });
+            let setPrivateDataTx;
 
-    it('should allow fact provider to delete private data', async() => {
-        const key = '0x1234567890123456789000000000000000000000000000000000000000000000';
-        const dataIPFSHash = "Qmblahblahblah";
-        const dataKeyHash = '0xbf65a1dee556a1db9c581a334f964d04b65a50a8dc881b93012a9cf53c2a6f3c';
+            beforeEach(async () => {
+                setPrivateDataTx = await passportAsLogic.setPrivateData(key, dataIPFSHash, dataKeyHash, {from: factProvider});
+            });
 
-        let tx = passportAsLogic.setPrivateData(key, dataIPFSHash, dataKeyHash, {from: factProvider});
-        await expectEvent.inTransaction(tx,"PrivateDataUpdated", {factProvider: factProvider, key: key});
+            describe('then', () => {
+                it('should emit PrivateDataUpdated event', async () => {
+                    await expectEvent.inTransaction(setPrivateDataTx, "PrivateDataUpdated", {factProvider: factProvider, key: key});
+                });
 
-        const [success, getDataIPFSHash, getDataKeyHash] = await passportAsLogic.getPrivateData(factProvider, key);
-        assert.isTrue(success);
-        assert.equal(dataIPFSHash, getDataIPFSHash);
-        assert.equal(dataKeyHash, getDataKeyHash);
+                it('should allow to get private data', async () => {
+                    const [success, getDataIPFSHash, getDataKeyHash] = await passportAsLogic.getPrivateData(factProvider, key);
+                    assert.isTrue(success);
+                    assert.equal(dataIPFSHash, getDataIPFSHash);
+                    assert.equal(dataKeyHash, getDataKeyHash);
+                });
 
-        let tx2 = passportAsLogic.deletePrivateData(key, {from: factProvider});
-        await expectEvent.inTransaction(tx2,"PrivateDataDeleted", {factProvider: factProvider, key: key});
+                it('should allow fact provider to delete private data', async () => {
+                    let tx2 = passportAsLogic.deletePrivateData(key, {from: factProvider});
+                    await expectEvent.inTransaction(tx2, "PrivateDataDeleted", {factProvider: factProvider, key: key});
 
-        const [success2] = await passportAsLogic.getPrivateData(factProvider, key);
-        assert.isFalse(success2);
-    });
+                    const [success2] = await passportAsLogic.getPrivateData(factProvider, key);
+                    assert.isFalse(success2);
+                });
+            });
 
-    it('should allow to propose private data exchange', async () => {
-        const key = '0x1234567890123456789000000000000000000000000000000000000000000000';
-        const dataIPFSHash = "Qmblahblahblah";
-        const dataKeyHash = '0xbf65a1dee556a1db9c581a334f964d04b65a50a8dc881b93012a9cf53c2a6f3c';
+            describe('when data requester proposed private data exchange', () => {
+                const encryptedExchangeKey = web3.toHex('it is encrypted proposedExchange key');
+                // proposedExchange key:      0x5c221e572354457236e2ae6fc1b3f0e868fd0456c7d5f5e1799c22a0e8548826
+                // proposedExchange key hash: 0xa9528b0b967627d1c5c092548d9697988b161bbb868f58671d7cfbe98f708745
+                const exchangeKeyHash = '0xa9528b0b967627d1c5c092548d9697988b161bbb868f58671d7cfbe98f708745';
+                const dataRequesterStake = 10000000;
 
-        // exchange key:      0x5c221e572354457236e2ae6fc1b3f0e868fd0456c7d5f5e1799c22a0e8548826
-        // exchange key hash: 0xa9528b0b967627d1c5c092548d9697988b161bbb868f58671d7cfbe98f708745
-        //
-        // data key:      0x85e2cd9bf60f3b2e5d81608c47283d2d8527e9a4b4753f0e6f5e308510b2a6d8
-        // data key hash: 0xbf65a1dee556a1db9c581a334f964d04b65a50a8dc881b93012a9cf53c2a6f3c
-        //
-        // exchange key XOR data key: 0xd9c0d3ccd55b7e5c6b63cee3869bcdc5eddaedf273a0caef16c21225f8e62efe (encrypted data key)
-        const encryptedExchangeKey = web3.toHex('it is encrypted exchange key');
-        const exchangeKeyHash = '0xa9528b0b967627d1c5c092548d9697988b161bbb868f58671d7cfbe98f708745';
-        const exchangeStake = 10000000;
+                let exchangeIdx;
+                let passportBalanceBeforePropose;
+                let proposePrivateDataExchangeTx;
 
-        let tx = passportAsLogic.setPrivateData(key, dataIPFSHash, dataKeyHash, {from: factProvider});
-        await expectEvent.inTransaction(tx, "PrivateDataUpdated", {factProvider: factProvider, key: key});
+                beforeEach(async () => {
+                    exchangeIdx = await passportAsLogic.getPrivateDataExchangesCount();
+                    passportBalanceBeforePropose = await web3.eth.getBalance(passportAsLogic.address);
 
-        const exchangesCount = await passportAsLogic.getPrivateDataExchangesCount();
-        let passportBalance = await web3.eth.getBalance(passportAsLogic.address);
+                    proposePrivateDataExchangeTx = await passportAsLogic.proposePrivateDataExchange(factProvider, key, encryptedExchangeKey, exchangeKeyHash, {
+                        from: dataRequester,
+                        value: dataRequesterStake
+                    });
+                });
 
-        let proposeTx = await passportAsLogic.proposePrivateDataExchange(factProvider, key, encryptedExchangeKey, exchangeKeyHash, {
-            from: dataRequester,
-            value: exchangeStake
+                describe('then', () => {
+                    it('should emit PrivateDataExchangeProposed event', async () => {
+                        await expectEvent.inTransaction(proposePrivateDataExchangeTx, "PrivateDataExchangeProposed", {
+                            exchangeIdx: exchangeIdx,
+                            dataRequester: dataRequester,
+                            passportOwner: passportOwner
+                        });
+                    });
+
+                    it('should increment total count of private data exchanges', async () => {
+                        const exchangesCount2 = await passportAsLogic.getPrivateDataExchangesCount();
+                        exchangesCount2.should.be.bignumber.equal(exchangeIdx.add(1));
+                    });
+
+                    it('should increment passport contract balance', async () => {
+                        const passportBalance = await web3.eth.getBalance(passportAsLogic.address);
+                        passportBalance.should.be.bignumber.equal(passportBalanceBeforePropose.add(dataRequesterStake));
+                    });
+
+                    it('should correctly set exchange fields', async () => {
+                        const proposeTxTimestamp = txTimestamp(proposePrivateDataExchangeTx);
+
+                        const proposedExchange = await passportAsLogic.privateDataExchanges(exchangeIdx);
+                        assert.equal(proposedExchange[ExchangeField.DataRequester], dataRequester);
+                        proposedExchange[ExchangeField.DataRequesterValue].should.be.bignumber.equal(dataRequesterStake);
+                        assert.equal(proposedExchange[ExchangeField.PassportOwner], passportOwner);
+                        proposedExchange[ExchangeField.PassportOwnerValue].should.be.bignumber.equal(0);
+                        assert.equal(proposedExchange[ExchangeField.FactProvider], factProvider);
+                        assert.equal(proposedExchange[ExchangeField.Key], key);
+                        assert.equal(proposedExchange[ExchangeField.DataIPFSHash], dataIPFSHash);
+                        assert.equal(proposedExchange[ExchangeField.DataKeyHash], dataKeyHash);
+                        assert.equal(proposedExchange[ExchangeField.EncryptedExchangeKey], encryptedExchangeKey);
+                        assert.equal(proposedExchange[ExchangeField.ExchangeKeyHash], exchangeKeyHash);
+                        assert.equal(proposedExchange[ExchangeField.EncryptedDataKey], '0x0000000000000000000000000000000000000000000000000000000000000000');
+                        assert.equal(proposedExchange[ExchangeField.State], ExchangeState.Proposed);
+                        proposedExchange[ExchangeField.StateExpired].should.be.bignumber.equal(proposeTimeout.add(proposeTxTimestamp));
+                    });
+                });
+
+                describe('when passport owner accepted private data exchange', () => {
+                    // encrypted data key = proposedExchange key XOR data key: 0xd9c0d3ccd55b7e5c6b63cee3869bcdc5eddaedf273a0caef16c21225f8e62efe
+                    const encryptedDataKey = '0xd9c0d3ccd55b7e5c6b63cee3869bcdc5eddaedf273a0caef16c21225f8e62efe';
+                    const passportOwnerStake = 20000000;
+
+                    let passportBalanceBeforeAccept;
+                    let acceptPrivateDataExchangeTx;
+
+                    beforeEach(async () => {
+                        passportBalanceBeforeAccept = await web3.eth.getBalance(passportAsLogic.address);
+                        acceptPrivateDataExchangeTx = await passportAsLogic.acceptPrivateDataExchange(exchangeIdx, encryptedDataKey, {from: passportOwner, value: passportOwnerStake});
+                    });
+
+                    describe('then', () => {
+                        it('should emit PrivateDataExchangeAccepted event', async () => {
+                            await expectEvent.inTransaction(acceptPrivateDataExchangeTx, "PrivateDataExchangeAccepted", {
+                                exchangeIdx: exchangeIdx,
+                                dataRequester: dataRequester,
+                                passportOwner: passportOwner
+                            });
+                        });
+
+                        it('should increment passport contract balance', async () => {
+                            const passportBalance = await web3.eth.getBalance(passportAsLogic.address);
+                            passportBalance.should.be.bignumber.equal(passportBalanceBeforeAccept.add(passportOwnerStake));
+                        });
+
+                        it('should correctly set exchange fields', async () => {
+                            const acceptTxTimestamp = txTimestamp(acceptPrivateDataExchangeTx);
+
+                            const acceptedExchange = await passportAsLogic.privateDataExchanges(exchangeIdx);
+                            assert.equal(acceptedExchange[ExchangeField.DataRequester], dataRequester);
+                            acceptedExchange[ExchangeField.DataRequesterValue].should.be.bignumber.equal(dataRequesterStake);
+                            assert.equal(acceptedExchange[ExchangeField.PassportOwner], passportOwner);
+                            acceptedExchange[ExchangeField.PassportOwnerValue].should.be.bignumber.equal(passportOwnerStake);
+                            assert.equal(acceptedExchange[ExchangeField.FactProvider], factProvider);
+                            assert.equal(acceptedExchange[ExchangeField.Key], key);
+                            assert.equal(acceptedExchange[ExchangeField.DataIPFSHash], dataIPFSHash);
+                            assert.equal(acceptedExchange[ExchangeField.DataKeyHash], dataKeyHash);
+                            assert.equal(acceptedExchange[ExchangeField.EncryptedExchangeKey], encryptedExchangeKey);
+                            assert.equal(acceptedExchange[ExchangeField.ExchangeKeyHash], exchangeKeyHash);
+                            assert.equal(acceptedExchange[ExchangeField.EncryptedDataKey], encryptedDataKey);
+                            assert.equal(acceptedExchange[ExchangeField.State], ExchangeState.Accepted);
+                            acceptedExchange[ExchangeField.StateExpired].should.be.bignumber.equal(acceptTimeout.add(acceptTxTimestamp));
+                        });
+                    });
+                });
+            });
         });
-        await expectEvent.inTransaction(proposeTx, "PrivateDataExchangeProposed", {
-            exchangeIdx: exchangesCount,
-            dataRequester: dataRequester,
-            passportOwner: passportOwner
-        });
-        const proposeTxTimestamp = txTimestamp(proposeTx);
-
-        const exchangesCount2 = await passportAsLogic.getPrivateDataExchangesCount();
-        exchangesCount2.should.be.bignumber.equal(exchangesCount.add(1));
-
-        let passportBalance2 = await web3.eth.getBalance(passportAsLogic.address);
-        passportBalance2.should.be.bignumber.equal(passportBalance.add(exchangeStake));
-
-        const exchange = await passportAsLogic.privateDataExchanges(exchangesCount);
-        assert.equal(exchange[ExchangeField.DataRequester], dataRequester);
-        exchange[ExchangeField.DataRequesterValue].should.be.bignumber.equal(exchangeStake);
-        assert.equal(exchange[ExchangeField.PassportOwner], passportOwner);
-        exchange[ExchangeField.PassportOwnerValue].should.be.bignumber.equal(0);
-        assert.equal(exchange[ExchangeField.FactProvider], factProvider);
-        assert.equal(exchange[ExchangeField.Key], key);
-        assert.equal(exchange[ExchangeField.DataIPFSHash], dataIPFSHash);
-        assert.equal(exchange[ExchangeField.DataKeyHash], dataKeyHash);
-        assert.equal(exchange[ExchangeField.EncryptedExchangeKey], encryptedExchangeKey);
-        assert.equal(exchange[ExchangeField.ExchangeKeyHash], exchangeKeyHash);
-        assert.equal(exchange[ExchangeField.EncryptedDataKey], '0x0000000000000000000000000000000000000000000000000000000000000000');
-        assert.equal(exchange[ExchangeField.State], ExchangeState.Proposed);
-        exchange[ExchangeField.StateExpired].should.be.bignumber.equal(proposeTimeout.add(proposeTxTimestamp));
-    });
-
-    it('should allow passport owner to accept private data exchange after proposition', async () => {
-        const key = '0x1234567890123456789000000000000000000000000000000000000000000000';
-        const dataIPFSHash = "Qmblahblahblah";
-        const dataKeyHash = '0xbf65a1dee556a1db9c581a334f964d04b65a50a8dc881b93012a9cf53c2a6f3c';
-
-        // proposedExchange key:      0x5c221e572354457236e2ae6fc1b3f0e868fd0456c7d5f5e1799c22a0e8548826
-        // proposedExchange key hash: 0xa9528b0b967627d1c5c092548d9697988b161bbb868f58671d7cfbe98f708745
-        //
-        // data key:      0x85e2cd9bf60f3b2e5d81608c47283d2d8527e9a4b4753f0e6f5e308510b2a6d8
-        // data key hash: 0xbf65a1dee556a1db9c581a334f964d04b65a50a8dc881b93012a9cf53c2a6f3c
-        //
-        // proposedExchange key XOR data key: 0xd9c0d3ccd55b7e5c6b63cee3869bcdc5eddaedf273a0caef16c21225f8e62efe (encrypted data key)
-        const encryptedExchangeKey = web3.toHex('it is encrypted proposedExchange key');
-        const exchangeKeyHash = '0xa9528b0b967627d1c5c092548d9697988b161bbb868f58671d7cfbe98f708745';
-        const exchangeStake = 10000000;
-        const encryptedDataKey = '0xd9c0d3ccd55b7e5c6b63cee3869bcdc5eddaedf273a0caef16c21225f8e62efe';
-
-        let tx = passportAsLogic.setPrivateData(key, dataIPFSHash, dataKeyHash, {from: factProvider});
-        await expectEvent.inTransaction(tx, "PrivateDataUpdated", {factProvider: factProvider, key: key});
-
-        const exchangesCount = await passportAsLogic.getPrivateDataExchangesCount();
-        let passportBalance = await web3.eth.getBalance(passportAsLogic.address);
-
-        const proposeTx = await passportAsLogic.proposePrivateDataExchange(factProvider, key, encryptedExchangeKey, exchangeKeyHash, {
-            from: dataRequester,
-            value: exchangeStake
-        });
-        await expectEvent.inTransaction(proposeTx, "PrivateDataExchangeProposed", {
-            exchangeIdx: exchangesCount,
-            dataRequester: dataRequester,
-            passportOwner: passportOwner
-        });
-        const proposeTxTimestamp = txTimestamp(proposeTx);
-
-        const exchangesCount2 = await passportAsLogic.getPrivateDataExchangesCount();
-        exchangesCount2.should.be.bignumber.equal(exchangesCount.add(1));
-
-        let passportBalance2 = await web3.eth.getBalance(passportAsLogic.address);
-        passportBalance2.should.be.bignumber.equal(passportBalance.add(exchangeStake));
-
-        const proposedExchange = await passportAsLogic.privateDataExchanges(exchangesCount);
-        assert.equal(proposedExchange[ExchangeField.DataRequester], dataRequester);
-        proposedExchange[ExchangeField.DataRequesterValue].should.be.bignumber.equal(exchangeStake);
-        assert.equal(proposedExchange[ExchangeField.PassportOwner], passportOwner);
-        proposedExchange[ExchangeField.PassportOwnerValue].should.be.bignumber.equal(0);
-        assert.equal(proposedExchange[ExchangeField.FactProvider], factProvider);
-        assert.equal(proposedExchange[ExchangeField.Key], key);
-        assert.equal(proposedExchange[ExchangeField.DataIPFSHash], dataIPFSHash);
-        assert.equal(proposedExchange[ExchangeField.DataKeyHash], dataKeyHash);
-        assert.equal(proposedExchange[ExchangeField.EncryptedExchangeKey], encryptedExchangeKey);
-        assert.equal(proposedExchange[ExchangeField.ExchangeKeyHash], exchangeKeyHash);
-        assert.equal(proposedExchange[ExchangeField.EncryptedDataKey], '0x0000000000000000000000000000000000000000000000000000000000000000');
-        assert.equal(proposedExchange[ExchangeField.State], ExchangeState.Proposed);
-        proposedExchange[ExchangeField.StateExpired].should.be.bignumber.equal(proposeTimeout.add(proposeTxTimestamp));
-
-        const acceptTx = await passportAsLogic.acceptPrivateDataExchange(exchangesCount, encryptedDataKey, {from: passportOwner, value: exchangeStake});
-        await expectEvent.inTransaction(acceptTx, "PrivateDataExchangeAccepted", {
-            exchangeIdx: exchangesCount,
-            dataRequester: dataRequester,
-            passportOwner: passportOwner
-        });
-        const acceptTxTimestamp = txTimestamp(acceptTx);
-
-        let passportBalance3 = await web3.eth.getBalance(passportAsLogic.address);
-        passportBalance3.should.be.bignumber.equal(passportBalance2.add(exchangeStake));
-
-        const acceptedExchange = await passportAsLogic.privateDataExchanges(exchangesCount);
-        assert.equal(acceptedExchange[ExchangeField.DataRequester], dataRequester);
-        acceptedExchange[ExchangeField.DataRequesterValue].should.be.bignumber.equal(exchangeStake);
-        assert.equal(acceptedExchange[ExchangeField.PassportOwner], passportOwner);
-        acceptedExchange[ExchangeField.PassportOwnerValue].should.be.bignumber.equal(exchangeStake);
-        assert.equal(acceptedExchange[ExchangeField.FactProvider], factProvider);
-        assert.equal(acceptedExchange[ExchangeField.Key], key);
-        assert.equal(acceptedExchange[ExchangeField.DataIPFSHash], dataIPFSHash);
-        assert.equal(acceptedExchange[ExchangeField.DataKeyHash], dataKeyHash);
-        assert.equal(acceptedExchange[ExchangeField.EncryptedExchangeKey], encryptedExchangeKey);
-        assert.equal(acceptedExchange[ExchangeField.ExchangeKeyHash], exchangeKeyHash);
-        assert.equal(acceptedExchange[ExchangeField.EncryptedDataKey], encryptedDataKey);
-        assert.equal(acceptedExchange[ExchangeField.State], ExchangeState.Accepted);
-        acceptedExchange[ExchangeField.StateExpired].should.be.bignumber.equal(acceptTimeout.add(acceptTxTimestamp));
     });
 });
