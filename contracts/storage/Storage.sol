@@ -99,7 +99,7 @@ contract Storage is ClaimableProxy
         uint256 stateExpired;           // The state expiration timestamp
     }
 
-    uint internal openPrivateDataExchangeCount; // the count of open private data exchanges
+    uint internal openPrivateDataExchangeCount; // the count of open private data exchanges TODO: use it in contract destruction/ownership transfer logic
     PrivateDataExchange[] public privateDataExchanges;
 
     /***************************************************************************
