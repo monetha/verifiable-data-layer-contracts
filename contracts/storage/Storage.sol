@@ -100,7 +100,7 @@ contract Storage is ClaimableProxy
     }
 
     uint internal openPrivateDataExchangeCount; // the count of open private data exchanges
-    PrivateDataExchange[] internal privateDataExchanges;
+    PrivateDataExchange[] public privateDataExchanges;
 
     /***************************************************************************
      *** END OF SECTION OF STORAGE VARIABLES                                 ***
