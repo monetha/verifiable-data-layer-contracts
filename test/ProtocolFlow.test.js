@@ -204,4 +204,35 @@ contract('Passport', function (accounts) {
 
         await expectThrow(passportAsLogic.deleteString(key, {from: factProvider}), EVMRevert);
     });
+
+    it('should allow to store and read private data', async() => {
+        const key = web3.toHex('test');
+        const dataIPFSHash = "Qmblahblahblah";
+        const keyHash = '0x736f6d6520686173680000000000000000000000000000000000000000000000';
+
+        await passportAsLogic.setPrivateData(key, dataIPFSHash, keyHash, {from: factProvider});
+
+        const [success, getDataIPFSHash, getDataKeyHash] = await passportAsLogic.getPrivateData(factProvider, key);
+        assert.isTrue(success);
+        assert.equal(dataIPFSHash, getDataIPFSHash);
+        assert.equal(keyHash, getDataKeyHash);
+    });
+
+    it('should allow fact provider to delete private data', async function () {
+        const key = web3.toHex('test');
+        const dataIPFSHash = "Qmblahblahblah";
+        const keyHash = '0x736f6d6520686173680000000000000000000000000000000000000000000000';
+
+        await passportAsLogic.setPrivateData(key, dataIPFSHash, keyHash, {from: factProvider});
+
+        const [success, getDataIPFSHash, getDataKeyHash] = await passportAsLogic.getPrivateData(factProvider, key);
+        assert.isTrue(success);
+        assert.equal(dataIPFSHash, getDataIPFSHash);
+        assert.equal(keyHash, getDataKeyHash);
+
+        await passportAsLogic.deletePrivateData(key, {from: factProvider});
+
+        const [success2] = await passportAsLogic.getPrivateData(factProvider, key);
+        assert.isFalse(success2);
+    });
 });
