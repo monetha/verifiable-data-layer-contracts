@@ -38,7 +38,7 @@ contract('Passport', function (accounts) {
         State: 11,
         StateExpired: 12
     };
-    const ExchangeState = {Closed : 0, Proposed: 1, Accepted: 2};
+    const ExchangeState = {Closed: 0, Proposed: 1, Accepted: 2};
 
     beforeEach(async function () {
         const monethaOwner = accounts[0];
@@ -252,7 +252,10 @@ contract('Passport', function (accounts) {
 
             describe('then', () => {
                 it('should emit PrivateDataUpdated event', async () => {
-                    await expectEvent.inTransaction(setPrivateDataTx, "PrivateDataUpdated", {factProvider: factProvider, key: key});
+                    await expectEvent.inTransaction(setPrivateDataTx, "PrivateDataUpdated", {
+                        factProvider: factProvider,
+                        key: key
+                    });
                 });
 
                 it('should allow to get private data', async () => {
@@ -340,7 +343,10 @@ contract('Passport', function (accounts) {
 
                     beforeEach(async () => {
                         passportBalanceBeforeAccept = await web3.eth.getBalance(passportAsLogic.address);
-                        acceptPrivateDataExchangeTx = await passportAsLogic.acceptPrivateDataExchange(exchangeIdx, encryptedDataKey, {from: passportOwner, value: passportOwnerStake});
+                        acceptPrivateDataExchangeTx = await passportAsLogic.acceptPrivateDataExchange(exchangeIdx, encryptedDataKey, {
+                            from: passportOwner,
+                            value: passportOwnerStake
+                        });
                     });
 
                     describe('then', () => {
@@ -484,6 +490,128 @@ contract('Passport', function (accounts) {
                             });
                         });
                     });
+
+                    describe('when exchange acceptance/dispute timed out', () => {
+
+                        beforeEach(async () => {
+                            await increaseTime(acceptTimeout.add(1).toNumber());
+                        });
+
+                        describe('then', () => {
+                            it('should not allow data requester to open dispute', async () => {
+                                await expectThrow(passportAsLogic.disputePrivateDataExchange(exchangeIdx, exchangeKey, {
+                                    from: dataRequester,
+                                    gasPrice: 1
+                                }), EVMRevert);
+                            });
+                        });
+
+                        describe('when passport owner finished private data exchange', () => {
+
+                            let passportBalanceBeforeFinish;
+                            let passportOwnerBalanceBeforeFinish;
+                            let finishPrivateDataExchangeTx;
+                            let finishPrivateDataExchangeTxCost;
+
+                            beforeEach(async () => {
+                                passportBalanceBeforeFinish = await web3.eth.getBalance(passportAsLogic.address);
+                                passportOwnerBalanceBeforeFinish = await web3.eth.getBalance(passportOwner);
+                                finishPrivateDataExchangeTx = await passportAsLogic.finishPrivateDataExchange(exchangeIdx, {
+                                    from: passportOwner,
+                                    gasPrice: 1
+                                });
+                                finishPrivateDataExchangeTxCost = finishPrivateDataExchangeTx.receipt.gasUsed;
+                            });
+
+                            describe('then', () => {
+                                it('should emit PrivateDataExchangeClosed event', async () => {
+                                    await expectEvent.inTransaction(finishPrivateDataExchangeTx, "PrivateDataExchangeClosed", {
+                                        exchangeIdx: exchangeIdx
+                                    });
+                                });
+
+                                it('should decrement passport contract balance', async () => {
+                                    const passportBalance = await web3.eth.getBalance(passportAsLogic.address);
+                                    passportBalance.should.be.bignumber.equal(passportBalanceBeforeFinish.sub(passportOwnerStake).sub(dataRequesterStake));
+                                });
+
+                                it('should transfer all staked amount to passport owner', async () => {
+                                    const passportOwnerBalance = await web3.eth.getBalance(passportOwner);
+                                    passportOwnerBalance.should.be.bignumber.equal(
+                                        passportOwnerBalanceBeforeFinish.add(passportOwnerStake).add(dataRequesterStake).sub(finishPrivateDataExchangeTxCost))
+                                });
+
+                                it('should correctly set exchange fields', async () => {
+                                    const acceptTxTimestamp = txTimestamp(acceptPrivateDataExchangeTx);
+
+                                    const exch = await passportAsLogic.privateDataExchanges(exchangeIdx);
+                                    assert.equal(exch[ExchangeField.DataRequester], dataRequester);
+                                    exch[ExchangeField.DataRequesterValue].should.be.bignumber.equal(dataRequesterStake);
+                                    assert.equal(exch[ExchangeField.PassportOwner], passportOwner);
+                                    exch[ExchangeField.PassportOwnerValue].should.be.bignumber.equal(passportOwnerStake);
+                                    assert.equal(exch[ExchangeField.FactProvider], factProvider);
+                                    assert.equal(exch[ExchangeField.Key], key);
+                                    assert.equal(exch[ExchangeField.DataIPFSHash], dataIPFSHash);
+                                    assert.equal(exch[ExchangeField.DataKeyHash], dataKeyHash);
+                                    assert.equal(exch[ExchangeField.EncryptedExchangeKey], encryptedExchangeKey);
+                                    assert.equal(exch[ExchangeField.ExchangeKeyHash], exchangeKeyHash);
+                                    assert.equal(exch[ExchangeField.EncryptedDataKey], encryptedDataKey);
+                                    assert.equal(exch[ExchangeField.State], ExchangeState.Closed);
+                                    exch[ExchangeField.StateExpired].should.be.bignumber.equal(acceptTimeout.add(acceptTxTimestamp));
+                                });
+                            });
+                        });
+
+                        describe('when data requester finished private data exchange', () => {
+
+                            let passportBalanceBeforeFinish;
+                            let passportOwnerBalanceBeforeFinish;
+                            let finishPrivateDataExchangeTx;
+
+                            beforeEach(async () => {
+                                passportBalanceBeforeFinish = await web3.eth.getBalance(passportAsLogic.address);
+                                passportOwnerBalanceBeforeFinish = await web3.eth.getBalance(passportOwner);
+                                finishPrivateDataExchangeTx = await passportAsLogic.finishPrivateDataExchange(exchangeIdx, {from: dataRequester});
+                            });
+
+                            describe('then', () => {
+                                it('should emit PrivateDataExchangeClosed event', async () => {
+                                    await expectEvent.inTransaction(finishPrivateDataExchangeTx, "PrivateDataExchangeClosed", {
+                                        exchangeIdx: exchangeIdx
+                                    });
+                                });
+
+                                it('should decrement passport contract balance', async () => {
+                                    const passportBalance = await web3.eth.getBalance(passportAsLogic.address);
+                                    passportBalance.should.be.bignumber.equal(passportBalanceBeforeFinish.sub(passportOwnerStake).sub(dataRequesterStake));
+                                });
+
+                                it('should transfer all staked amount to passport owner', async () => {
+                                    const passportOwnerBalance = await web3.eth.getBalance(passportOwner);
+                                    passportOwnerBalance.should.be.bignumber.equal(passportOwnerBalanceBeforeFinish.add(passportOwnerStake).add(dataRequesterStake))
+                                });
+
+                                it('should correctly set exchange fields', async () => {
+                                    const acceptTxTimestamp = txTimestamp(acceptPrivateDataExchangeTx);
+
+                                    const exch = await passportAsLogic.privateDataExchanges(exchangeIdx);
+                                    assert.equal(exch[ExchangeField.DataRequester], dataRequester);
+                                    exch[ExchangeField.DataRequesterValue].should.be.bignumber.equal(dataRequesterStake);
+                                    assert.equal(exch[ExchangeField.PassportOwner], passportOwner);
+                                    exch[ExchangeField.PassportOwnerValue].should.be.bignumber.equal(passportOwnerStake);
+                                    assert.equal(exch[ExchangeField.FactProvider], factProvider);
+                                    assert.equal(exch[ExchangeField.Key], key);
+                                    assert.equal(exch[ExchangeField.DataIPFSHash], dataIPFSHash);
+                                    assert.equal(exch[ExchangeField.DataKeyHash], dataKeyHash);
+                                    assert.equal(exch[ExchangeField.EncryptedExchangeKey], encryptedExchangeKey);
+                                    assert.equal(exch[ExchangeField.ExchangeKeyHash], exchangeKeyHash);
+                                    assert.equal(exch[ExchangeField.EncryptedDataKey], encryptedDataKey);
+                                    assert.equal(exch[ExchangeField.State], ExchangeState.Closed);
+                                    exch[ExchangeField.StateExpired].should.be.bignumber.equal(acceptTimeout.add(acceptTxTimestamp));
+                                });
+                            });
+                        });
+                    });
                 });
 
                 describe('when passport owner accepted private data exchange but is trying to cheat', () => {
@@ -495,7 +623,10 @@ contract('Passport', function (accounts) {
 
                     beforeEach(async () => {
                         passportBalanceBeforeAccept = await web3.eth.getBalance(passportAsLogic.address);
-                        acceptPrivateDataExchangeTx = await passportAsLogic.acceptPrivateDataExchange(exchangeIdx, encryptedDataKey, {from: passportOwner, value: passportOwnerStake});
+                        acceptPrivateDataExchangeTx = await passportAsLogic.acceptPrivateDataExchange(exchangeIdx, encryptedDataKey, {
+                            from: passportOwner,
+                            value: passportOwnerStake
+                        });
                     });
 
                     describe('then', () => {
@@ -592,7 +723,10 @@ contract('Passport', function (accounts) {
                         beforeEach(async () => {
                             passportBalanceBeforeDispute = await web3.eth.getBalance(passportAsLogic.address);
                             dataRequesterBalanceBeforeDispute = await web3.eth.getBalance(dataRequester);
-                            disputePrivateDataExchangeTx = await passportAsLogic.disputePrivateDataExchange(exchangeIdx, exchangeKey, {from: dataRequester, gasPrice: 1});
+                            disputePrivateDataExchangeTx = await passportAsLogic.disputePrivateDataExchange(exchangeIdx, exchangeKey, {
+                                from: dataRequester,
+                                gasPrice: 1
+                            });
                             disputePrivateDataExchangeTxCost = disputePrivateDataExchangeTx.receipt.gasUsed;
                         });
 
@@ -644,9 +778,9 @@ contract('Passport', function (accounts) {
                     });
                 });
 
-                describe('after exchange proposition timeout', () => {
+                describe('when exchange proposition timed out', () => {
 
-                    beforeEach(async() => {
+                    beforeEach(async () => {
                         await increaseTime(proposeTimeout.add(1).toNumber());
                     });
 
@@ -657,10 +791,13 @@ contract('Passport', function (accounts) {
                         let timeoutPrivateDataExchangeTx;
                         let timeoutPrivateDataExchangeTxCost;
 
-                        beforeEach(async() => {
+                        beforeEach(async () => {
                             passportBalanceBeforeTimeout = await web3.eth.getBalance(passportAsLogic.address);
                             dataRequesterBalanceBeforeTimeout = await web3.eth.getBalance(dataRequester);
-                            timeoutPrivateDataExchangeTx = await passportAsLogic.timeoutPrivateDataExchange(exchangeIdx, {from: dataRequester, gasPrice: 1});
+                            timeoutPrivateDataExchangeTx = await passportAsLogic.timeoutPrivateDataExchange(exchangeIdx, {
+                                from: dataRequester,
+                                gasPrice: 1
+                            });
                             timeoutPrivateDataExchangeTxCost = timeoutPrivateDataExchangeTx.receipt.gasUsed;
                         });
 
