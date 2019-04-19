@@ -906,6 +906,19 @@ contract('Passport', function (accounts) {
                         await increaseTime(proposeTimeout.add(1).toNumber());
                     });
 
+                    describe('then', () => {
+                        it('should not allow passport owner to fairly accept exchange proposition', async () => {
+                            // encrypted data key = proposedExchange key XOR data key: 0xd9c0d3ccd55b7e5c6b63cee3869bcdc5eddaedf273a0caef16c21225f8e62efe
+                            const encryptedDataKey = '0xd9c0d3ccd55b7e5c6b63cee3869bcdc5eddaedf273a0caef16c21225f8e62efe';
+                            const passportOwnerStake = 20000000;
+
+                            await expectThrow(passportAsLogic.acceptPrivateDataExchange(exchangeIdx, encryptedDataKey, {
+                                from: passportOwner,
+                                value: passportOwnerStake
+                            }), EVMRevert);
+                        });
+                    });
+
                     describe('when data requester closes exchange', () => {
 
                         let passportBalanceBeforeTimeout;
