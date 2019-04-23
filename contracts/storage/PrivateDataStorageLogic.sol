@@ -6,8 +6,8 @@ import "./Storage.sol";
 contract PrivateDataStorageLogic is Storage {
     using SafeMath for uint256;
 
-    event PrivateDataUpdated(address indexed factProvider, bytes32 indexed key);
-    event PrivateDataDeleted(address indexed factProvider, bytes32 indexed key);
+    event PrivateDataHashesUpdated(address indexed factProvider, bytes32 indexed key);
+    event PrivateDataHashesDeleted(address indexed factProvider, bytes32 indexed key);
 
     event PrivateDataExchangeProposed(uint256 indexed exchangeIdx, address indexed dataRequester, address indexed passportOwner);
     event PrivateDataExchangeAccepted(uint256 indexed exchangeIdx, address indexed dataRequester, address indexed passportOwner);
@@ -19,20 +19,20 @@ contract PrivateDataStorageLogic is Storage {
 
     /// @param _key The key for the record
     /// @param _dataIPFSHash The IPFS hash of encrypted private data
-    /// @param _keyHash The hash of symmetric key that was used to encrypt the data
-    function setPrivateData(bytes32 _key, string _dataIPFSHash, bytes32 _keyHash) external {
-        _setPrivateData(_key, _dataIPFSHash, _keyHash);
+    /// @param _dataKeyHash The hash of symmetric key that was used to encrypt the data
+    function setPrivateDataHashes(bytes32 _key, string _dataIPFSHash, bytes32 _dataKeyHash) external {
+        _setPrivateDataHashes(_key, _dataIPFSHash, _dataKeyHash);
     }
 
     /// @param _key The key for the record
-    function deletePrivateData(bytes32 _key) external {
-        _deletePrivateData(_key);
+    function deletePrivateDataHashes(bytes32 _key) external {
+        _deletePrivateDataHashes(_key);
     }
 
     /// @param _factProvider The fact provider
     /// @param _key The key for the record
-    function getPrivateData(address _factProvider, bytes32 _key) external view returns (bool success, string dataIPFSHash, bytes32 dataKeyHash) {
-        return _getPrivateData(_factProvider, _key);
+    function getPrivateDataHashes(address _factProvider, bytes32 _key) external view returns (bool success, string dataIPFSHash, bytes32 dataKeyHash) {
+        return _getPrivateDataHashes(_factProvider, _key);
     }
 
     /**
@@ -52,7 +52,7 @@ contract PrivateDataStorageLogic is Storage {
         bytes _encryptedExchangeKey,
         bytes32 _exchangeKeyHash
     ) external payable {
-        (bool success, string memory dataIPFSHash, bytes32 dataKeyHash) = _getPrivateData(_factProvider, _key);
+        (bool success, string memory dataIPFSHash, bytes32 dataKeyHash) = _getPrivateDataHashes(_factProvider, _key);
         require(success, "private data must exist");
 
         address passportOwner = _getOwner();
@@ -169,23 +169,23 @@ contract PrivateDataStorageLogic is Storage {
     function _incOpenPrivateDataExchangesCount() internal { openPrivateDataExchangesCount = openPrivateDataExchangesCount + 1; }
     function _decOpenPrivateDataExchangesCount() internal { openPrivateDataExchangesCount = openPrivateDataExchangesCount - 1; }
 
-    function _setPrivateData(bytes32 _key, string _dataIPFSHash, bytes32 _keyHash) allowedFactProvider internal {
+    function _setPrivateDataHashes(bytes32 _key, string _dataIPFSHash, bytes32 _dataKeyHash) allowedFactProvider internal {
         privateDataStorage[msg.sender][_key] = PrivateDataValue({
             initialized : true,
             value : PrivateData({
                 dataIPFSHash : _dataIPFSHash,
-                dataKeyHash : _keyHash
+                dataKeyHash : _dataKeyHash
                 })
             });
-        emit PrivateDataUpdated(msg.sender, _key);
+        emit PrivateDataHashesUpdated(msg.sender, _key);
     }
 
-    function _deletePrivateData(bytes32 _key) allowedFactProvider internal {
+    function _deletePrivateDataHashes(bytes32 _key) allowedFactProvider internal {
         delete privateDataStorage[msg.sender][_key];
-        emit PrivateDataDeleted(msg.sender, _key);
+        emit PrivateDataHashesDeleted(msg.sender, _key);
     }
 
-    function _getPrivateData(address _factProvider, bytes32 _key) internal view returns (bool success, string dataIPFSHash, bytes32 dataKeyHash) {
+    function _getPrivateDataHashes(address _factProvider, bytes32 _key) internal view returns (bool success, string dataIPFSHash, bytes32 dataKeyHash) {
         PrivateDataValue storage initValue = privateDataStorage[_factProvider][_key];
         return (initValue.initialized, initValue.value.dataIPFSHash, initValue.value.dataKeyHash);
     }

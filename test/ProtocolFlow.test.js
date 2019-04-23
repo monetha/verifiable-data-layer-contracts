@@ -246,30 +246,30 @@ contract('Passport', function (accounts) {
             let setPrivateDataTx;
 
             beforeEach(async () => {
-                setPrivateDataTx = await passportAsLogic.setPrivateData(key, dataIPFSHash, dataKeyHash, {from: factProvider});
+                setPrivateDataTx = await passportAsLogic.setPrivateDataHashes(key, dataIPFSHash, dataKeyHash, {from: factProvider});
             });
 
 
             describe('then', () => {
                 it('should emit PrivateDataUpdated event', async () => {
-                    await expectEvent.inTransaction(setPrivateDataTx, "PrivateDataUpdated", {
+                    await expectEvent.inTransaction(setPrivateDataTx, "PrivateDataHashesUpdated", {
                         factProvider: factProvider,
                         key: key
                     });
                 });
 
                 it('should allow to get private data', async () => {
-                    const [success, getDataIPFSHash, getDataKeyHash] = await passportAsLogic.getPrivateData(factProvider, key);
+                    const [success, getDataIPFSHash, getDataKeyHash] = await passportAsLogic.getPrivateDataHashes(factProvider, key);
                     assert.isTrue(success);
                     assert.equal(dataIPFSHash, getDataIPFSHash);
                     assert.equal(dataKeyHash, getDataKeyHash);
                 });
 
                 it('should allow fact provider to delete private data', async () => {
-                    const tx = passportAsLogic.deletePrivateData(key, {from: factProvider});
-                    await expectEvent.inTransaction(tx, "PrivateDataDeleted", {factProvider: factProvider, key: key});
+                    const tx = passportAsLogic.deletePrivateDataHashes(key, {from: factProvider});
+                    await expectEvent.inTransaction(tx, "PrivateDataHashesDeleted", {factProvider: factProvider, key: key});
 
-                    const [success] = await passportAsLogic.getPrivateData(factProvider, key);
+                    const [success] = await passportAsLogic.getPrivateDataHashes(factProvider, key);
                     assert.isFalse(success);
                 });
             });
