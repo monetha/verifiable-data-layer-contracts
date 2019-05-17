@@ -3,6 +3,7 @@ const {EVMRevert} = require('./helpers/EVMRevert');
 const expectEvent = require('./helpers/expectEvent');
 const {txTimestamp} = require('./helpers/txTimestamp');
 const {increaseTime, duration} = require("./helpers/increaseTime");
+const {assertRevert} = require('./helpers/assertRevert');
 const BigNumber = web3.BigNumber;
 
 const Passport = artifacts.require('Passport');
@@ -78,6 +79,10 @@ contract('Passport', function (accounts) {
 
         const ownerL = await passportAsLogic.owner();
         assert.equal(ownerL, newOwner);
+    });
+
+    it('should allow to destroy passport', async function () {
+        await passport.destroy({from: passportOwner});
     });
 
     it('should store string of fact provider', async function () {
@@ -295,6 +300,10 @@ contract('Passport', function (accounts) {
                 });
 
                 describe('then', () => {
+                    it('should not allow to destroy passport', async () => {
+                        await assertRevert(passport.destroy({from: passportOwner}));
+                    });
+
                     it('should emit PrivateDataExchangeProposed event', async () => {
                         await expectEvent.inTransaction(proposePrivateDataExchangeTx, "PrivateDataExchangeProposed", {
                             exchangeIdx: exchangeIdx,
@@ -396,6 +405,10 @@ contract('Passport', function (accounts) {
                         });
 
                         describe('then', () => {
+                            it('should allow to destroy passport', async function () {
+                                passport.destroy({from: passportOwner});
+                            });
+
                             it('should emit PrivateDataExchangeClosed event', async () => {
                                 await expectEvent.inTransaction(finishPrivateDataExchangeTx, "PrivateDataExchangeClosed", {
                                     exchangeIdx: exchangeIdx

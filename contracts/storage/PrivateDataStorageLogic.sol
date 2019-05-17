@@ -144,7 +144,8 @@ contract PrivateDataStorageLogic is Storage {
         require(now < exchange.stateExpired, "exchange must not be expired");
         require(keccak256(abi.encodePacked(_exchangeKey)) == exchange.exchangeKeyHash, "exchange key hash must match");
 
-        bytes32 dataKey = _exchangeKey ^ exchange.encryptedDataKey; // data symmetric key is XORed with exchange key
+        bytes32 dataKey = _exchangeKey ^ exchange.encryptedDataKey;
+        // data symmetric key is XORed with exchange key
         bool validDataKey = keccak256(abi.encodePacked(dataKey)) == exchange.dataKeyHash;
 
         exchange.state = PrivateDataExchangeState.Closed;
@@ -152,10 +153,10 @@ contract PrivateDataStorageLogic is Storage {
         uint256 val = exchange.dataRequesterValue.add(exchange.passportOwnerValue);
 
         address cheater;
-        if (validDataKey) { // the data key was valid -> data requester cheated
+        if (validDataKey) {// the data key was valid -> data requester cheated
             require(exchange.passportOwner.send(val));
             cheater = exchange.dataRequester;
-        } else { // the data key is invalid -> passport owner cheated
+        } else {// the data key is invalid -> passport owner cheated
             require(exchange.dataRequester.send(val));
             cheater = exchange.passportOwner;
         }
@@ -166,8 +167,19 @@ contract PrivateDataStorageLogic is Storage {
         emit PrivateDataExchangeDisputed(_exchangeIdx, !validDataKey, cheater);
     }
 
-    function _incOpenPrivateDataExchangesCount() internal { openPrivateDataExchangesCount = openPrivateDataExchangesCount + 1; }
-    function _decOpenPrivateDataExchangesCount() internal { openPrivateDataExchangesCount = openPrivateDataExchangesCount - 1; }
+    function _incOpenPrivateDataExchangesCount() internal {
+        if (++openPrivateDataExchangesCount == 1) {
+            // don't allow passport owner to transfer ownership and destroy passport when there are open exchanges
+            _setPaused(true);
+        }
+    }
+
+    function _decOpenPrivateDataExchangesCount() internal {
+        if (--openPrivateDataExchangesCount == 0) {
+            // allow passport owner to transfer ownership and destroy passport when all exchanges are closed
+            _setPaused(false);
+        }
+    }
 
     function _setPrivateDataHashes(bytes32 _key, string _dataIPFSHash, bytes32 _dataKeyHash) allowedFactProvider internal {
         privateDataStorage[msg.sender][_key] = PrivateDataValue({
