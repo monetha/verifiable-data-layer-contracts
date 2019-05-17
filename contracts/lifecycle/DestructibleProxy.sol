@@ -10,11 +10,11 @@ contract DestructibleProxy is OwnableProxy {
     /**
      * @dev Transfers the current balance to the owner and terminates the contract.
      */
-    function destroy() public onlyOwner {
+    function destroy() public onlyOwner whenNotPaused {
         selfdestruct(_getOwner());
     }
 
-    function destroyAndSend(address _recipient) public onlyOwner {
+    function destroyAndSend(address _recipient) public onlyOwner whenNotPaused {
         selfdestruct(_recipient);
     }
 }

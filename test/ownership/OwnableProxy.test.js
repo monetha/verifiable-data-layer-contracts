@@ -1,6 +1,6 @@
 const { shouldBehaveLikeOwnable } = require('./Ownable.behaviour');
 
-const OwnableProxy = artifacts.require('OwnableProxy');
+const OwnableProxy = artifacts.require('OwnableProxyMock');
 
 contract('OwnableProxy', function (accounts) {
   beforeEach(async function () {

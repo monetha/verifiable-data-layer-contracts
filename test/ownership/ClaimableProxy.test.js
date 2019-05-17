@@ -1,6 +1,6 @@
 const { assertRevert } = require('../helpers/assertRevert');
 
-const ClaimableProxy = artifacts.require('ClaimableProxy');
+const ClaimableProxy = artifacts.require('ClaimableProxyMock');
 
 contract('ClaimableProxy', function (accounts) {
   let claimable;
@@ -20,6 +20,13 @@ contract('ClaimableProxy', function (accounts) {
     const pendingOwner = await claimable.pendingOwner();
 
     assert.isTrue(pendingOwner === newOwner);
+  });
+
+  it('should prevent transferOwnership when paused', async function () {
+    await claimable.pause();
+
+    const newOwner = accounts[1];
+    await assertRevert(claimable.transferOwnership(newOwner));
   });
 
   it('should prevent to claimOwnership from no pendingOwner', async function () {
@@ -47,6 +54,12 @@ contract('ClaimableProxy', function (accounts) {
       const owner = await claimable.owner();
 
       assert.isTrue(owner === newOwner);
+    });
+
+    it('should prevent claimOwnership when paused', async function () {
+      await claimable.pause();
+
+      await assertRevert(claimable.claimOwnership({ from: newOwner }));
     });
   });
 });

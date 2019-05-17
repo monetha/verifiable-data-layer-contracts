@@ -1,12 +1,10 @@
 pragma solidity ^0.4.24;
 
-import "../ownership/OwnableProxy.sol";
-
 /**
  * @title PausableProxy
  * @dev Base contract which allows children to implement an emergency stop mechanism.
  */
-contract PausableProxy is OwnableProxy {
+contract PausableProxy {
     /**
      * @dev Storage slot with the paused state of the contract.
      * This is the keccak-256 hash of "org.monetha.proxy.paused", and is
