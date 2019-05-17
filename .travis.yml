@@ -1,8 +1,9 @@
 language: node_js
-sudo: required
+
+dist: xenial
 
 node_js:
-  - "9"
+  - '10'
 
 cache:
   directories:
@@ -13,10 +14,6 @@ env:
     - ARTIFACTS_DIR=artifacts
     - ARTIFACT_NAME=reputation-contracts
     - ARTIFACT_EXT=zip
-
-before_install:
-  - sudo apt-get -qq update
-  - sudo apt-get install -y jq
 
 install:
   - npm install
