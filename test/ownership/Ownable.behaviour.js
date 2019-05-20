@@ -13,38 +13,55 @@ function shouldBehaveLikeOwnable (accounts) {
       owner.should.not.eq(ZERO_ADDRESS);
     });
 
-    it('changes owner after transfer', async function () {
-      const other = accounts[1];
-      await this.ownable.transferOwnership(other);
-      const owner = await this.ownable.owner();
+    describe('transferOwnership', function () {
+      it('changes owner after transfer', async function () {
+        const other = accounts[1];
+        await this.ownable.transferOwnership(other);
+        const owner = await this.ownable.owner();
 
-      owner.should.eq(other);
+        owner.should.eq(other);
+      });
+
+      it('should revert transaction when paused', async function () {
+        await this.ownable.pause();
+
+        const other = accounts[1];
+        await expectThrow(this.ownable.transferOwnership(other), EVMRevert);
+      });
+
+      it('should prevent non-owners from transfering', async function () {
+        const other = accounts[2];
+        const owner = await this.ownable.owner.call();
+        owner.should.not.eq(other);
+        await expectThrow(this.ownable.transferOwnership(other, { from: other }), EVMRevert);
+      });
+
+      it('should guard ownership against stuck state', async function () {
+        const originalOwner = await this.ownable.owner();
+        await expectThrow(this.ownable.transferOwnership(null, { from: originalOwner }), EVMRevert);
+      });
     });
 
-    it('should prevent non-owners from transfering', async function () {
-      const other = accounts[2];
-      const owner = await this.ownable.owner.call();
-      owner.should.not.eq(other);
-      await expectThrow(this.ownable.transferOwnership(other, { from: other }), EVMRevert);
-    });
+    describe('renounceOwnership', function () {
+      it('should revert transaction when paused', async function () {
+        await this.ownable.pause();
 
-    it('should guard ownership against stuck state', async function () {
-      const originalOwner = await this.ownable.owner();
-      await expectThrow(this.ownable.transferOwnership(null, { from: originalOwner }), EVMRevert);
-    });
+        await expectThrow(this.ownable.renounceOwnership(), EVMRevert);
+      });
 
-    it('loses owner after renouncement', async function () {
-      await this.ownable.renounceOwnership();
-      const owner = await this.ownable.owner();
+      it('loses owner after renouncement', async function () {
+        await this.ownable.renounceOwnership();
+        const owner = await this.ownable.owner();
 
-      owner.should.eq(ZERO_ADDRESS);
-    });
+        owner.should.eq(ZERO_ADDRESS);
+      });
 
-    it('should prevent non-owners from renouncement', async function () {
-      const other = accounts[2];
-      const owner = await this.ownable.owner.call();
-      owner.should.not.eq(other);
-      await expectThrow(this.ownable.renounceOwnership({ from: other }), EVMRevert);
+      it('should prevent non-owners from renouncement', async function () {
+        const other = accounts[2];
+        const owner = await this.ownable.owner.call();
+        owner.should.not.eq(other);
+        await expectThrow(this.ownable.renounceOwnership({ from: other }), EVMRevert);
+      });
     });
   });
 }

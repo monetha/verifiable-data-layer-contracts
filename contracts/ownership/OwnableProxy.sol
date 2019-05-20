@@ -1,9 +1,11 @@
 pragma solidity ^0.4.24;
 
+import "../lifecycle/PausableProxy.sol";
+
 /**
  * @title OwnableProxy
  */
-contract OwnableProxy {
+contract OwnableProxy is PausableProxy {
     event OwnershipRenounced(address indexed previousOwner);
     event OwnershipTransferred(
         address indexed previousOwner,
@@ -41,7 +43,7 @@ contract OwnableProxy {
      * It will not be possible to call the functions with the `onlyOwner`
      * modifier anymore.
      */
-    function renounceOwnership() public onlyOwner {
+    function renounceOwnership() public onlyOwner whenNotPaused {
         emit OwnershipRenounced(_getOwner());
         _setOwner(address(0));
     }
@@ -50,7 +52,7 @@ contract OwnableProxy {
      * @dev Allows the current owner to transfer control of the contract to a newOwner.
      * @param _newOwner The address to transfer ownership to.
      */
-    function transferOwnership(address _newOwner) public onlyOwner {
+    function transferOwnership(address _newOwner) public onlyOwner whenNotPaused {
         _transferOwnership(_newOwner);
     }
 

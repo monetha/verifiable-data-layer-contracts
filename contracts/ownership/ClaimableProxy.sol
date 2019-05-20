@@ -38,14 +38,14 @@ contract ClaimableProxy is OwnableProxy {
      * @dev Allows the current owner to set the pendingOwner address.
      * @param newOwner The address to transfer ownership to.
      */
-    function transferOwnership(address newOwner) public onlyOwner {
+    function transferOwnership(address newOwner) public onlyOwner whenNotPaused {
         _setPendingOwner(newOwner);
     }
 
     /**
      * @dev Allows the pendingOwner address to finalize the transfer.
      */
-    function claimOwnership() public onlyPendingOwner {
+    function claimOwnership() public onlyPendingOwner whenNotPaused {
         emit OwnershipTransferred(_getOwner(), _getPendingOwner());
         _setOwner(_getPendingOwner());
         _setPendingOwner(address(0));

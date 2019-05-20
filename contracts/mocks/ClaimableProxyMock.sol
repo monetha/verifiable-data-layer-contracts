@@ -1,10 +1,8 @@
 pragma solidity ^0.4.24;
 
-import "../lifecycle/DestructibleProxy.sol";
+import "../ownership/ClaimableProxy.sol";
 
-contract DestructibleProxyMock is DestructibleProxy {
-    function() payable public {}
-
+contract ClaimableProxyMock is ClaimableProxy {
     function pause() public {
         _setPaused(true);
     }
