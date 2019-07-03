@@ -14,8 +14,8 @@ contract PrivateDataStorageLogic is Storage {
     event PrivateDataExchangeClosed(uint256 indexed exchangeIdx);
     event PrivateDataExchangeDisputed(uint256 indexed exchangeIdx, bool indexed successful, address indexed cheater);
 
-    uint256 constant public privateDataExchangeProposeTimeout = 1 days;
-    uint256 constant public privateDataExchangeAcceptTimeout = 1 days;
+    uint256 constant public privateDataExchangeProposeTimeout = 86400000000000; // 1 day in nanoseconds: https://github.com/jpmorganchase/quorum/issues/713
+    uint256 constant public privateDataExchangeAcceptTimeout = 86400000000000; // 1 day in nanoseconds: https://github.com/jpmorganchase/quorum/issues/713
 
     /// @param _key The key for the record
     /// @param _dataIPFSHash The IPFS hash of encrypted private data
