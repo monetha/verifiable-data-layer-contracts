@@ -70,7 +70,7 @@ contract PrivateDataStorageLogic is Storage {
             exchangeKeyHash : _exchangeKeyHash,
             encryptedDataKey : encryptedDataKey,
             state : PrivateDataExchangeState.Proposed,
-            stateExpired : now + privateDataExchangeProposeTimeout
+            stateExpired : _nowSeconds() + privateDataExchangeProposeTimeout
             });
         privateDataExchanges.push(exchange);
 
@@ -88,12 +88,12 @@ contract PrivateDataStorageLogic is Storage {
         require(msg.sender == exchange.passportOwner, "only passport owner allowed");
         require(PrivateDataExchangeState.Proposed == exchange.state, "exchange must be in proposed state");
         require(msg.value >= exchange.dataRequesterValue, "need to stake at least data requester amount");
-        require(now < exchange.stateExpired, "exchange state expired");
+        require(_nowSeconds() < exchange.stateExpired, "exchange state expired");
 
         exchange.passportOwnerValue = msg.value;
         exchange.encryptedDataKey = _encryptedDataKey;
         exchange.state = PrivateDataExchangeState.Accepted;
-        exchange.stateExpired = now + privateDataExchangeAcceptTimeout;
+        exchange.stateExpired = _nowSeconds() + privateDataExchangeAcceptTimeout;
 
         emit PrivateDataExchangeAccepted(_exchangeIdx, exchange.dataRequester, msg.sender);
     }
@@ -103,7 +103,7 @@ contract PrivateDataStorageLogic is Storage {
         require(_exchangeIdx < privateDataExchanges.length, "invalid exchange index");
         PrivateDataExchange storage exchange = privateDataExchanges[_exchangeIdx];
         require(PrivateDataExchangeState.Accepted == exchange.state, "exchange must be in accepted state");
-        require(now > exchange.stateExpired || msg.sender == exchange.dataRequester, "exchange must be either expired or be finished by the data requester");
+        require(_nowSeconds() > exchange.stateExpired || msg.sender == exchange.dataRequester, "exchange must be either expired or be finished by the data requester");
 
         exchange.state = PrivateDataExchangeState.Closed;
 
@@ -122,7 +122,7 @@ contract PrivateDataStorageLogic is Storage {
         PrivateDataExchange storage exchange = privateDataExchanges[_exchangeIdx];
         require(PrivateDataExchangeState.Proposed == exchange.state, "exchange must be in proposed state");
         require(msg.sender == exchange.dataRequester, "only data requester allowed");
-        require(now > exchange.stateExpired, "exchange must be expired");
+        require(_nowSeconds() > exchange.stateExpired, "exchange must be expired");
 
         exchange.state = PrivateDataExchangeState.Closed;
 
@@ -141,7 +141,7 @@ contract PrivateDataStorageLogic is Storage {
         PrivateDataExchange storage exchange = privateDataExchanges[_exchangeIdx];
         require(PrivateDataExchangeState.Accepted == exchange.state, "exchange must be in accepted state");
         require(msg.sender == exchange.dataRequester, "only data requester allowed");
-        require(now < exchange.stateExpired, "exchange must not be expired");
+        require(_nowSeconds() < exchange.stateExpired, "exchange must not be expired");
         require(keccak256(abi.encodePacked(_exchangeKey)) == exchange.exchangeKeyHash, "exchange key hash must match");
 
         bytes32 dataKey = _exchangeKey ^ exchange.encryptedDataKey;
@@ -202,4 +202,16 @@ contract PrivateDataStorageLogic is Storage {
         return (initValue.initialized, initValue.value.dataIPFSHash, initValue.value.dataKeyHash);
     }
 
+    function _nowSeconds() private view returns(uint256) {
+        uint256 t = now;
+
+        // In Quorum blockchain timestamp is in nanoseconds, not seconds:
+        // https://github.com/jpmorganchase/quorum/issues/713
+        // https://github.com/jpmorganchase/quorum/issues/190
+        if (t > 150000000000000000) {
+            t /= 1000000000;
+        }
+
+        return t;
+    }
 }
