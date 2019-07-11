@@ -2,7 +2,6 @@
   "name": "reputation-contracts",
   "version": "1.0.0",
   "description": "Reputation contracts",
-  "main": "truffle.js",
   "dependencies": {
     "chai": "^4.1.2",
     "chai-bignumber": "^2.0.2",
