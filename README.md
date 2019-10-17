@@ -1,7 +1,7 @@
 # Monetha: Decentralized Reputation Framework [![Build Status][1]][2]
 
-[1]: https://travis-ci.org/monetha/reputation-contracts.svg?branch=master
-[2]: https://travis-ci.org/monetha/reputation-contracts
+[1]: https://travis-ci.org/monetha/verifiable-data-layer-contracts.svg?branch=master
+[2]: https://travis-ci.org/monetha/verifiable-data-layer-contracts
 
 # Reputation Layer
 
